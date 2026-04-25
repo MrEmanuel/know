@@ -1,5 +1,5 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { basename, join, resolve } from "node:path";
 
 export const KNOWLEDGE_ROOT = ".knowledge";
 
@@ -15,11 +15,21 @@ export const KNOWLEDGE_DIRECTORIES = [
 
 export interface InitKnowledgeProjectOptions {
   cwd?: string;
+  outDir?: string;
 }
 
 export interface InitKnowledgeProjectResult {
   root: string;
   directories: string[];
+}
+
+export class KnowledgeProjectAlreadyExistsError extends Error {
+  constructor(root: string) {
+    super(
+      `Knowledge project already exists at ${root}. Overwrite, remove, and fix modes are not implemented yet.`,
+    );
+    this.name = "KnowledgeProjectAlreadyExistsError";
+  }
 }
 
 const generatedIndexIgnoreRule = "indexes/";
@@ -29,11 +39,12 @@ export async function initKnowledgeProject(
   options: InitKnowledgeProjectOptions = {},
 ): Promise<InitKnowledgeProjectResult> {
   const cwd = options.cwd ?? process.cwd();
-  const root = join(cwd, KNOWLEDGE_ROOT);
+  const root = resolveKnowledgeRoot(cwd, options.outDir);
   const directories = KNOWLEDGE_DIRECTORIES.map((directory) =>
     join(root, directory),
   );
 
+  await ensureKnowledgeRootDoesNotExist(root);
   await mkdir(root, { recursive: true });
   await Promise.all(
     directories.map((directory) => mkdir(directory, { recursive: true })),
@@ -44,6 +55,30 @@ export async function initKnowledgeProject(
     root,
     directories,
   };
+}
+
+function resolveKnowledgeRoot(cwd: string, outDir?: string) {
+  const target = resolve(cwd, outDir ?? ".");
+
+  if (basename(target) === KNOWLEDGE_ROOT) {
+    return target;
+  }
+
+  return join(target, KNOWLEDGE_ROOT);
+}
+
+async function ensureKnowledgeRootDoesNotExist(root: string) {
+  try {
+    await stat(root);
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return;
+    }
+
+    throw error;
+  }
+
+  throw new KnowledgeProjectAlreadyExistsError(root);
 }
 
 async function ensureKnowledgeGitignore(root: string) {

@@ -1,0 +1,39 @@
+evidence:
+  - id: evidence.readme.overview
+    source: README.md
+    relation: states
+    lines: "35-55"
+    supports:
+      - concept.knowledge-system
+      - knowledge.files.source-of-truth
+      - knowledge.sqlite.generated-read-model
+
+  - id: evidence.readme.core-principle
+    source: README.md
+    relation: states
+    lines: "59-73"
+    supports:
+      - knowledge.authoring.markdown-yaml-only
+      - knowledge.sqlite.indexer-only-writer
+
+  - id: evidence.readme.indexing
+    source: README.md
+    relation: states
+    lines: "228-249"
+    supports:
+      - knowledge.indexes.not-versioned
+
+  - id: evidence.readme.agent-interaction
+    source: README.md
+    relation: states
+    lines: "327-352"
+    supports:
+      - knowledge.agents.write-via-git-diffs
+
+  - id: evidence.readme.traceability
+    source: README.md
+    relation: states
+    lines: "414-424"
+    supports:
+      - knowledge.traceability.required
+      - knowledge.agents.write-via-git-diffs

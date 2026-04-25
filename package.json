@@ -26,6 +26,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
+    "init:knowledge": "node dist/cli.mjs init",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "release": "bumpp",

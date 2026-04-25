@@ -2,7 +2,10 @@ import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { describe, expect, test } from 'vitest'
-import { initKnowledgeProject } from '../src'
+import {
+  initKnowledgeProject,
+  KnowledgeProjectAlreadyExistsError,
+} from '../src'
 import { runCli } from '../src/cli'
 
 async function makeWorkspace() {
@@ -43,19 +46,34 @@ describe('initKnowledgeProject', () => {
     await expect(readFile(join(cwd, '.knowledge', '.gitignore'), 'utf8')).resolves.toContain('indexes/')
   })
 
-  test('can be run again without clobbering existing ignore rules', async () => {
+  test('creates the knowledge source tree in a requested output directory', async () => {
+    const cwd = await makeWorkspace()
+
+    await initKnowledgeProject({ cwd, outDir: 'generated' })
+
+    await expectDirectory(join(cwd, 'generated', '.knowledge', 'concepts'))
+    await expectDirectory(join(cwd, 'generated', '.knowledge', 'rules'))
+    await expect(pathExists(join(cwd, '.knowledge'))).resolves.toBe(false)
+  })
+
+  test('accepts an output path that already ends in .knowledge', async () => {
+    const cwd = await makeWorkspace()
+
+    await initKnowledgeProject({ cwd, outDir: join('generated', '.knowledge') })
+
+    await expectDirectory(join(cwd, 'generated', '.knowledge', 'concepts'))
+    await expect(pathExists(join(cwd, 'generated', '.knowledge', '.knowledge'))).resolves.toBe(false)
+  })
+
+  test('fails instead of clobbering an existing knowledge project', async () => {
     const cwd = await makeWorkspace()
     const knowledgeRoot = join(cwd, '.knowledge')
 
     await mkdir(knowledgeRoot)
     await writeFile(join(knowledgeRoot, '.gitignore'), 'custom-rule\n')
-    await initKnowledgeProject({ cwd })
-    await initKnowledgeProject({ cwd })
 
-    const gitignore = await readFile(join(cwd, '.knowledge', '.gitignore'), 'utf8')
-
-    expect(gitignore).toContain('custom-rule')
-    expect(gitignore.match(/^indexes\/$/gm)).toHaveLength(1)
+    await expect(initKnowledgeProject({ cwd })).rejects.toBeInstanceOf(KnowledgeProjectAlreadyExistsError)
+    await expect(readFile(join(cwd, '.knowledge', '.gitignore'), 'utf8')).resolves.toBe('custom-rule\n')
   })
 })
 
@@ -71,6 +89,34 @@ describe('know init', () => {
     })).resolves.toBe(0)
 
     await expectDirectory(join(cwd, '.knowledge', 'concepts'))
-    expect(stdout.join('\n')).toContain('Initialized .knowledge')
+    expect(stdout.join('\n')).toContain(join(cwd, '.knowledge'))
+  })
+
+  test('initializes a requested output directory', async () => {
+    const cwd = await makeWorkspace()
+
+    await expect(runCli(['init', '--out-dir', 'generated'], {
+      cwd,
+      stdout: () => undefined,
+      stderr: () => undefined,
+    })).resolves.toBe(0)
+
+    await expectDirectory(join(cwd, 'generated', '.knowledge', 'concepts'))
+  })
+
+  test('reports an existing knowledge project without overwriting it', async () => {
+    const cwd = await makeWorkspace()
+    const stderr: string[] = []
+
+    await initKnowledgeProject({ cwd })
+
+    await expect(runCli(['init'], {
+      cwd,
+      stdout: () => undefined,
+      stderr: (line) => stderr.push(line),
+    })).resolves.toBe(1)
+
+    expect(stderr.join('\n')).toContain('Overwrite, remove, and fix modes are not implemented yet')
+    expect(stderr.join('\n')).toContain('choose another --out-dir')
   })
 })
