@@ -1,26 +1,36 @@
-# tsdown-starter
+# know
 
-A starter for creating a TypeScript package.
+A Git-native knowledge layer built for AI and humans to capture domain knowledge, rules, and decisions alongside a codebase.
 
 ## Development
 
 - Install dependencies:
 
 ```bash
-npm install
+yarn install
 ```
 
 - Run the unit tests:
 
 ```bash
-npm run test
+yarn test
 ```
 
 - Build the library:
 
 ```bash
-npm run build
+yarn build
 ```
+
+## Usage
+
+Initialize a repository:
+
+```bash
+know init
+```
+
+This creates the `.knowledge/` source tree and ignore rules for generated indexes. The SQLite database is created later by indexing.
 
 # Knowledge System (Git-Native + SQLite)
 

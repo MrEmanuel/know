@@ -1,8 +1,8 @@
 {
-  "name": "tsdown-starter",
+  "name": "know",
   "type": "module",
   "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
+  "description": "Git-native knowledge files with a generated SQLite read model.",
   "packageManager": "yarn@4.14.1",
   "author": "Author Name <author.name@mail.com>",
   "license": "MIT",
@@ -16,8 +16,10 @@
   },
   "exports": {
     ".": "./dist/index.mjs",
+    "./cli": "./dist/cli.mjs",
     "./package.json": "./package.json"
   },
+  "bin": "./dist/cli.mjs",
   "files": [
     "dist"
   ],
@@ -30,7 +32,7 @@
     "prepublishOnly": "pnpm run build"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.6.0",
     "@typescript/native-preview": "7.0.0-dev.20260328.1",
     "bumpp": "^11.0.1",
     "tsdown": "^0.21.7",
