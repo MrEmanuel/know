@@ -1,14 +1,16 @@
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
+import {
+  installAgentInstructions,
+  type AgentInstructionOperation,
+} from "./agent-instructions";
 
 export const KNOWLEDGE_ROOT = ".knowledge";
 
 export const KNOWLEDGE_DIRECTORIES = [
   "concepts",
   "rules",
-  "decisions",
-  "evidence",
-  "sources",
+  "rationales",
   "indexes",
   "schemas",
 ] as const;
@@ -16,17 +18,22 @@ export const KNOWLEDGE_DIRECTORIES = [
 export interface InitKnowledgeProjectOptions {
   cwd?: string;
   outDir?: string;
+  agentFiles?: boolean;
+  dryRun?: boolean;
 }
 
 export interface InitKnowledgeProjectResult {
   root: string;
+  projectRoot: string;
   directories: string[];
+  agentInstructions: AgentInstructionOperation[];
+  dryRun: boolean;
 }
 
 export class KnowledgeProjectAlreadyExistsError extends Error {
   constructor(root: string) {
     super(
-      `Knowledge project already exists at ${root}. Overwrite, remove, and fix modes are not implemented yet.`,
+      `Knowledge project path exists at ${root}, but it is not a directory.`,
     );
     this.name = "KnowledgeProjectAlreadyExistsError";
   }
@@ -40,20 +47,33 @@ export async function initKnowledgeProject(
 ): Promise<InitKnowledgeProjectResult> {
   const cwd = options.cwd ?? process.cwd();
   const root = resolveKnowledgeRoot(cwd, options.outDir);
+  const projectRoot = dirname(root);
   const directories = KNOWLEDGE_DIRECTORIES.map((directory) =>
     join(root, directory),
   );
 
-  await ensureKnowledgeRootDoesNotExist(root);
-  await mkdir(root, { recursive: true });
-  await Promise.all(
-    directories.map((directory) => mkdir(directory, { recursive: true })),
-  );
-  await ensureKnowledgeGitignore(root);
+  if (!options.dryRun) {
+    await ensureKnowledgeRootIsUsable(root);
+    await mkdir(root, { recursive: true });
+    await Promise.all(
+      directories.map((directory) => mkdir(directory, { recursive: true })),
+    );
+    await ensureKnowledgeGitignore(root);
+  }
+
+  const agentInstructions = await installAgentInstructions({
+    projectRoot,
+    knowledgeRoot: root,
+    agentFiles: options.agentFiles,
+    dryRun: options.dryRun,
+  });
 
   return {
     root,
+    projectRoot,
     directories,
+    agentInstructions,
+    dryRun: options.dryRun ?? false,
   };
 }
 
@@ -67,9 +87,13 @@ function resolveKnowledgeRoot(cwd: string, outDir?: string) {
   return join(target, KNOWLEDGE_ROOT);
 }
 
-async function ensureKnowledgeRootDoesNotExist(root: string) {
+async function ensureKnowledgeRootIsUsable(root: string) {
   try {
-    await stat(root);
+    const stats = await stat(root);
+
+    if (stats.isDirectory()) {
+      return;
+    }
   } catch (error) {
     if (isNodeError(error) && error.code === "ENOENT") {
       return;
