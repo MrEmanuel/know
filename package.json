@@ -24,13 +24,19 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsdown",
+    "clean:fixtures": "rm -rf ./tests/fixtures/init-repo ./tests/fixtures/product-maturity",
+    "build": "tsdown && node ./scripts/copy-tree-sitter-wasms.mjs",
     "dev": "tsdown --watch",
+    "dev:prepare:init-repo": "yarn build && node ./scripts/prepare-init-repo.mjs",
+    "dev:prepare:product-maturity": "yarn build && node ./scripts/prepare-product-maturity.mjs",
+    "test:prepare-fixtures": "yarn build && node ./scripts/prepare-init-repo.mjs && node ./scripts/prepare-product-maturity.mjs",
     "init:knowledge": "node dist/cli.mjs init",
-    "test": "vitest",
+    "pretest": "yarn test:prepare-fixtures",
+    "test": "yarn test:prepare-fixtures && vitest",
     "typecheck": "tsc --noEmit",
     "release": "bumpp",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "yarn build",
+    "know": "[ -f dist/cli.mjs ] || yarn build && node dist/cli.mjs"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
@@ -39,5 +45,28 @@
     "tsdown": "^0.21.7",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
+  },
+  "dependencies": {
+    "tinyglobby": "^0.2.16",
+    "tree-sitter-wasms": "^0.1.13",
+    "web-tree-sitter": "^0.22.6",
+    "yaml": "^2.8.3"
+  },
+  "dependenciesMeta": {
+    "tree-sitter-wasms@0.1.13": {
+      "unplugged": true
+    },
+    "web-tree-sitter@0.22.6": {
+      "unplugged": true
+    },
+    "web-tree-sitter@0.26.8": {
+      "unplugged": true
+    }
+  },
+  "inlinedDependencies": {
+    "fdir": "6.5.0",
+    "picomatch": "4.0.4",
+    "tinyglobby": "0.2.16",
+    "yaml": "2.8.3"
   }
 }

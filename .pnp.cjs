@@ -32,9 +32,13 @@ const RAW_RUNTIME_STATE =
           ["@typescript/native-preview", "npm:7.0.0-dev.20260328.1"],\
           ["bumpp", "npm:11.0.1"],\
           ["know", "workspace:."],\
+          ["tinyglobby", "npm:0.2.16"],\
+          ["tree-sitter-wasms", "npm:0.1.13"],\
           ["tsdown", "virtual:5125d7eeb0179fed27a974d68e0dad57b0c8b2235feff775700c6922666af52e00a944a0772ae44ece41e68cba1c66b069e2b49be314d7643e0d49aa2a711a28#npm:0.21.10"],\
           ["typescript", "patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>::version=6.0.3&hash=5786d5"],\
-          ["vitest", "virtual:5125d7eeb0179fed27a974d68e0dad57b0c8b2235feff775700c6922666af52e00a944a0772ae44ece41e68cba1c66b069e2b49be314d7643e0d49aa2a711a28#npm:4.1.5"]\
+          ["vitest", "virtual:5125d7eeb0179fed27a974d68e0dad57b0c8b2235feff775700c6922666af52e00a944a0772ae44ece41e68cba1c66b069e2b49be314d7643e0d49aa2a711a28#npm:4.1.5"],\
+          ["web-tree-sitter", "npm:0.22.6"],\
+          ["yaml", "npm:2.8.3"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -931,9 +935,13 @@ const RAW_RUNTIME_STATE =
           ["@typescript/native-preview", "npm:7.0.0-dev.20260328.1"],\
           ["bumpp", "npm:11.0.1"],\
           ["know", "workspace:."],\
+          ["tinyglobby", "npm:0.2.16"],\
+          ["tree-sitter-wasms", "npm:0.1.13"],\
           ["tsdown", "virtual:5125d7eeb0179fed27a974d68e0dad57b0c8b2235feff775700c6922666af52e00a944a0772ae44ece41e68cba1c66b069e2b49be314d7643e0d49aa2a711a28#npm:0.21.10"],\
           ["typescript", "patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>::version=6.0.3&hash=5786d5"],\
-          ["vitest", "virtual:5125d7eeb0179fed27a974d68e0dad57b0c8b2235feff775700c6922666af52e00a944a0772ae44ece41e68cba1c66b069e2b49be314d7643e0d49aa2a711a28#npm:4.1.5"]\
+          ["vitest", "virtual:5125d7eeb0179fed27a974d68e0dad57b0c8b2235feff775700c6922666af52e00a944a0772ae44ece41e68cba1c66b069e2b49be314d7643e0d49aa2a711a28#npm:4.1.5"],\
+          ["web-tree-sitter", "npm:0.22.6"],\
+          ["yaml", "npm:2.8.3"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -1389,6 +1397,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["tree-sitter-wasms", [\
+      ["npm:0.1.13", {\
+        "packageLocation": "./.yarn/unplugged/tree-sitter-wasms-npm-0.1.13-872969cb99/node_modules/tree-sitter-wasms/",\
+        "packageDependencies": [\
+          ["tree-sitter-wasms", "npm:0.1.13"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["tsdown", [\
       ["npm:0.21.10", {\
         "packageLocation": "../../.yarn/berry/cache/tsdown-npm-0.21.10-2ec7faf402-10c0.zip/node_modules/tsdown/",\
@@ -1683,6 +1700,15 @@ const RAW_RUNTIME_STATE =
           "@vitest/ui",\
           "happy-dom",\
           "jsdom"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["web-tree-sitter", [\
+      ["npm:0.22.6", {\
+        "packageLocation": "./.yarn/unplugged/web-tree-sitter-npm-0.22.6-363ed4f372/node_modules/web-tree-sitter/",\
+        "packageDependencies": [\
+          ["web-tree-sitter", "npm:0.22.6"]\
         ],\
         "linkType": "HARD"\
       }]\

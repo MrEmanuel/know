@@ -31,9 +31,9 @@ This repository uses \`know\` for structured domain knowledge. The source of tru
 
 Before editing any file, run:
 
-    know context <path>
+    yarn know context <path>
 
-Treat returned **active rules** as constraints on your change. If a rule is **stale**, read its linked rationale and either confirm it or propose a change.
+Treat returned **active rules** as constraints on your change. If a rule is **stale**, read its rationale and either confirm it or propose a change.
 
 Full workflow: \`.knowledge/agent-instructions.md\``);
 
@@ -41,7 +41,7 @@ const claudeManagedBlock = managedBlock(`## Repository knowledge
 
 This repository uses \`know\` for structured domain knowledge.
 
-Before editing any file, run \`know context <path>\` and treat returned rules as constraints. For broader queries, use \`know query "<sql>"\`.
+Before editing any file, run \`yarn know context <path>\` and treat returned rules as constraints. For broader queries, use \`yarn know query "<sql>"\`.
 
 Full workflow: \`.knowledge/agent-instructions.md\``);
 
@@ -49,13 +49,13 @@ const copilotManagedBlock = managedBlock(`## Repository knowledge
 
 This repository uses \`know\` for structured domain knowledge.
 
-Before editing any file, run \`know context <path>\` and treat returned rules as constraints. For broader queries, use \`know query "<sql>"\`.
+Before editing any file, run \`yarn know context <path>\` and treat returned rules as constraints. For broader queries, use \`yarn know query "<sql>"\`.
 
 Full workflow: \`.knowledge/agent-instructions.md\``);
 
 const cursorManagedBlock = managedBlock(`This repository uses \`know\`.
 
-Before editing any file, run \`know context <path>\` and treat returned rules as constraints. For broader queries, use \`know query "<sql>"\`.
+Before editing any file, run \`yarn know context <path>\` and treat returned rules as constraints. For broader queries, use \`yarn know query "<sql>"\`.
 
 Full workflow: \`.knowledge/agent-instructions.md\``);
 
@@ -70,45 +70,47 @@ const canonicalAgentInstructions = `# know agent instructions
 
 ## Purpose
 
-\`know\` captures domain knowledge, business rules, and rationale alongside the codebase. Knowledge lives in version-controlled Markdown files in \`.knowledge/\`; a generated SQLite database in \`.knowledge/indexes/\` makes it queryable.
+\`know\` captures domain rules, anchors, and rationale alongside the codebase. Knowledge lives in version-controlled Markdown files in \`.knowledge/\`; a generated SQLite database in \`.knowledge/indexes/\` makes it queryable.
 
 ## Before editing any file
 
 Run:
 
 \`\`\`bash
-know context <path>
+yarn know context <path>
 \`\`\`
+
+If this repository does not use Yarn, use the equivalent package-manager
+invocation, such as \`npx know context <path>\` or
+\`pnpm know context <path>\`.
 
 This returns:
 
 - **Active rules** whose anchors match the path — treat these as constraints.
-- **Stale rules** — the anchored code changed since last review. Read the linked rationale and either confirm (update \`reviewed:\`) or propose a change.
-- **Connected concepts** — vocabulary and context.
-- **Rationales** — the *why* behind rules.
+- **Stale rules** — the anchored code changed since last review. Read the rationale and either confirm (update \`reviewed:\`) or propose a change.
+- **Connected concepts** — optional vocabulary reached through matching rules.
 - **Broken anchors** — the code a rule pointed at no longer exists. Flag it.
 
 ## Broader queries
 
 \`\`\`bash
-know query "<sql>"     # read-only SQL against the index
-know query --schema    # print schema + example queries
+yarn know query "<sql>"     # read-only SQL against the index
+yarn know query --schema    # print schema + example queries
 \`\`\`
 
 ## Knowledge structure
 
-- \`.knowledge/concepts/\` — domain nouns (Item, Label, Maturity)
-- \`.knowledge/rules/\` — invariants and constraints, one file per concept area
-- \`.knowledge/rationales/\` — the *why*; dated filename, edited freely
+- \`.knowledge/rules/\` — source of truth; each \`##\` section is a rule with anchors and rationale.
+- \`.knowledge/concepts/\` — optional domain vocabulary reached from rule metadata.
 
 ## Rules for agents
 
-- Always run \`know context <path>\` before editing a file.
+- Always run \`yarn know context <path>\` before editing a file.
 - Treat active rules as constraints on your change.
 - Never write to \`.knowledge/indexes/knowledge.sqlite\`.
 - Never edit generated files under \`.knowledge/indexes/\`.
 - To add or update knowledge, edit \`.knowledge/*.md\` files only.
-- After editing knowledge files, run \`know index\` if available.
+- After editing knowledge files, run \`yarn know index\` if available.
 `;
 
 interface OptionalAgentFile {

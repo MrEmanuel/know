@@ -36,9 +36,13 @@ describe("initKnowledgeProject", () => {
 
     await expectDirectory(join(cwd, ".knowledge", "concepts"));
     await expectDirectory(join(cwd, ".knowledge", "rules"));
-    await expectDirectory(join(cwd, ".knowledge", "rationales"));
     await expectDirectory(join(cwd, ".knowledge", "indexes"));
-    await expectDirectory(join(cwd, ".knowledge", "schemas"));
+    await expect(pathExists(join(cwd, ".knowledge", "rationales"))).resolves.toBe(
+      false,
+    );
+    await expect(pathExists(join(cwd, ".knowledge", "schemas"))).resolves.toBe(
+      false,
+    );
 
     await expect(
       pathExists(join(cwd, ".knowledge", "indexes", "knowledge.sqlite")),
@@ -126,8 +130,9 @@ describe("initKnowledgeProject", () => {
       "utf8",
     );
     expect(instructions).toContain("# know agent instructions");
-    expect(instructions).toContain("know context <path>");
-    expect(instructions).toContain(".knowledge/rationales/");
+    expect(instructions).toContain("yarn know context <path>");
+    expect(instructions).toContain(".knowledge/rules/");
+    expect(instructions).not.toContain(".knowledge/rationales/");
   });
 
   test("creates AGENTS.md when missing", async () => {

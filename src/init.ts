@@ -10,9 +10,7 @@ export const KNOWLEDGE_ROOT = ".knowledge";
 export const KNOWLEDGE_DIRECTORIES = [
   "concepts",
   "rules",
-  "rationales",
   "indexes",
-  "schemas",
 ] as const;
 
 export interface InitKnowledgeProjectOptions {

@@ -3,6 +3,7 @@ dist
 *.log
 .DS_Store
 install-state.gz
+tests/fixtures
 
 # Yarn PnP generated/cache files
 .yarn/*

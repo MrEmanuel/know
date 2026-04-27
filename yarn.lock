@@ -751,9 +751,20 @@ __metadata:
     "@types/node": "npm:^25.6.0"
     "@typescript/native-preview": "npm:7.0.0-dev.20260328.1"
     bumpp: "npm:^11.0.1"
+    tinyglobby: "npm:^0.2.16"
+    tree-sitter-wasms: "npm:^0.1.13"
     tsdown: "npm:^0.21.7"
     typescript: "npm:^6.0.2"
     vitest: "npm:^4.1.2"
+    web-tree-sitter: "npm:^0.22.6"
+    yaml: "npm:^2.8.3"
+  dependenciesMeta:
+    tree-sitter-wasms@0.1.13:
+      unplugged: true
+    web-tree-sitter@0.22.6:
+      unplugged: true
+    web-tree-sitter@0.26.8:
+      unplugged: true
   bin:
     know: ./dist/cli.mjs
   languageName: unknown
@@ -1192,6 +1203,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tree-sitter-wasms@npm:^0.1.11, tree-sitter-wasms@npm:^0.1.13":
+  version: 0.1.13
+  resolution: "tree-sitter-wasms@npm:0.1.13"
+  dependencies:
+    tree-sitter-wasms: "npm:^0.1.11"
+  checksum: 10c0/d3e72cff8d83e70344613f2c116a35b6d81cfb2f30c54fd1204e5c8dbd47c28e3434437fc6b7c5d0a1612455e8ca928044257e4903c79afea932ed6a0b234a7a
+  languageName: node
+  linkType: hard
+
 "tsdown@npm:^0.21.7":
   version: 0.21.10
   resolution: "tsdown@npm:0.21.10"
@@ -1446,6 +1466,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"web-tree-sitter@npm:^0.22.6":
+  version: 0.22.6
+  resolution: "web-tree-sitter@npm:0.22.6"
+  checksum: 10c0/ac90117dec9127edfd98432977b62d12fed4889929f375045b728ea2ae6b1ed402de61ffd98324073f8bc3f6bb36fa7292f45d7c613c7abb4819f693a7672e31
+  languageName: node
+  linkType: hard
+
 "which@npm:^6.0.0":
   version: 6.0.1
   resolution: "which@npm:6.0.1"
@@ -1476,7 +1503,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.8.2":
+"yaml@npm:^2.8.2, yaml@npm:^2.8.3":
   version: 2.8.3
   resolution: "yaml@npm:2.8.3"
   bin:

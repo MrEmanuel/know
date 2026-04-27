@@ -1,20 +1,19 @@
 # know
 
-A Git-native knowledge layer that captures the _why_ behind a codebase and
-connects it to the code, so humans and AI agents can avoid breaking implicit
-rules they didn't know existed.
+A Git-native knowledge layer that connects code to the rules it must not
+silently break.
 
-> **Goal:** prevent 80–99% of "I didn't know that rule existed" mistakes by
-> surfacing relevant domain knowledge **before** a change is made.
+> **Goal:** prevent 80-99% of "I didn't know that rule existed" mistakes by
+> surfacing relevant rules and rationale before a change is made.
 
 ---
 
-# Part 1 — README (pragmatic)
+# Part 1 - README
 
-## How it works
+## How It Works
 
-```
-.knowledge files (source of truth)
+```txt
+.knowledge/rules/*.md
         ↓
 Indexer (know index / know sync)
         ↓
@@ -24,13 +23,15 @@ know context <path>   ← what humans and agents read
 know query "<sql>"
 ```
 
-- **Files** — canonical, version-controlled knowledge in Markdown + YAML.
-- **SQLite** — fast, disposable, read-only query layer.
-- **Git** — history, review, collaboration.
+- **Rules** are the source of truth: constraints, rationale, review state, and
+  anchors in Markdown.
+- **Anchors** connect rules to code with `symbol:`, `path:`, or `glob:`.
+- **Concepts** are optional vocabulary. They are context reached through a
+  matching rule, not the center of the system.
+- **SQLite** is a fast, disposable read model. The indexer is the only writer.
+- **Git** provides history, review, and collaboration.
 
-The indexer is the only writer to SQLite. All edits happen in the files.
-
-## Install & development
+## Install And Develop
 
 ```bash
 yarn install
@@ -38,22 +39,50 @@ yarn test
 yarn build
 ```
 
-## Initialize a repository
+In this repository, use the package script:
+
+```bash
+yarn know index
+yarn know context src/labels/visibility.ts
+yarn know status
+```
+
+When `know` is installed in another project, invoke it through that project's
+package manager unless the binary is installed globally:
+
+```bash
+npx know context <path>       # npm projects
+yarn know context <path>      # Yarn projects
+pnpm know context <path>      # pnpm projects
+```
+
+Inside package scripts, `know` is available from `node_modules/.bin`:
+
+```json
+{
+  "scripts": {
+    "know": "know",
+    "know:context": "know context src/example.ts"
+  }
+}
+```
+
+## Initialize A Repository
 
 ```bash
 know init
 ```
 
 This creates the `.knowledge/` source tree, ignore rules for generated
-indexes, and installs concise AI-agent instructions:
+indexes, and concise AI-agent instructions:
 
 ```txt
 .knowledge/agent-instructions.md
 AGENTS.md
 ```
 
-`AGENTS.md` receives a managed `know` block that points agents to the full
-workflow. Existing `AGENTS.md` content is preserved between:
+`AGENTS.md` receives a managed `know` block. Existing content is preserved
+between:
 
 ```md
 <!-- know:start -->
@@ -62,63 +91,35 @@ workflow. Existing `AGENTS.md` content is preserved between:
 
 Repeated `know init` runs are safe and idempotent.
 
-### Init flags
+### Init Flags
 
 ```bash
-know init --dry-run         # preview without writing
-know init --agent-files     # also create CLAUDE.md, .github/copilot-instructions.md, .cursor/rules/know.mdc
-know init --no-agent-files  # skip agent-specific files even when they exist
+know init --dry-run
+know init --agent-files
+know init --no-agent-files
 ```
 
-If agent-specific files already exist, `know init` inserts/updates a managed
-reference in them. Missing ones are not created unless `--agent-files` is
-passed.
+If agent-specific files already exist, `know init` inserts or updates a
+managed reference in them. Missing ones are not created unless
+`--agent-files` is passed.
 
-## Folder layout
+## Folder Layout
 
-```
+```txt
 .knowledge/
-  concepts/    item.md, label.md, maturity.md          ← nouns the business cares about
-  rules/       labels.md, item-maturity.md             ← invariants, one file per concept area
-  rationales/  2026-04-12-label-copy-behavior.md       ← the why; dated filename
-  glossary.md                                          ← optional
-  agent-instructions.md                                ← runtime contract for agents
-  schemas/                                             ← JSON schemas for validation
+  rules/       labels.md, item-maturity.md   ← source of truth
+  concepts/    label.md, maturity.md         ← optional vocabulary
+  agent-instructions.md                      ← runtime contract for agents
   indexes/
-    knowledge.sqlite                                   ← gitignored
+    knowledge.sqlite                         ← gitignored, generated
 ```
 
-## File format
+## File Format
 
-Markdown with YAML frontmatter. One format, everywhere.
+Markdown with YAML metadata. Rules are centered around `##` sections. The
+heading slug becomes the rule id: `rules.<file-slug>.<heading-slug>`.
 
-### Concept — `concepts/label.md`
-
-```markdown
----
-id: concept.label
-title: Label
-status: active
-tags: [labels, items]
-related: [concept.item, concept.maturity]
-anchors:
-  - glob: src/labels/**
-  - symbol: LabelService
-reviewed: 2026-04-01
----
-
-# Label
-
-A user-visible marker attached to items: `{ _id, title, color }`.
-
-Labels behave very differently depending on the maturity of the item they
-attach to (see [[concept.maturity]]).
-```
-
-### Rules — `rules/labels.md`
-
-Each `##` heading is a rule. The heading slug is its ID:
-`rules.labels.<heading-slug>`.
+### Rule File - `rules/labels.md`
 
 ```markdown
 ---
@@ -128,72 +129,63 @@ concept: concept.label
 # Label rules
 
 ## Personal labels are visible only to their creator
-
 status: active
+reviewed: 2026-04-01
 anchors:
-
-- symbol: LabelService.visibleTo
-- glob: src/labels/visibility.ts
-  rationale: rationales/2023-08-personal-labels.md
-  reviewed: 2026-04-01
+  - symbol: LabelService.visibleTo
+  - path: src/labels/visibility.ts
 
 Regardless of item maturity, personal labels never leak to other users.
 
+### Rationale
+
+Personal labels are private organization state. Showing them to other users
+leaks one user's organization model into another user's workspace.
+
 ## Personal labels are dropped on cross-user copy
-
 status: active
+reviewed: 2026-04-12
 anchors:
-
-- symbol: copyDocument
-- symbol: Item.duplicate
-  rationale: rationales/2026-04-12-label-copy-behavior.md
-  reviewed: 2026-04-12
+  - symbol: copyDocument
+  - symbol: Item.duplicate
 
 When user A duplicates an item owned by user B, personal labels are dropped.
 Shared labels follow.
+
+### Rationale
+
+Copying a colleague's item should copy shared data, not the colleague's
+private organization model.
 ```
 
-### Rationale — `rationales/2026-04-12-label-copy-behavior.md`
-
-Edit freely. Git carries the history. If intent changes substantively,
-write a new dated rationale and update the rule's `rationale:` pointer —
-the old file stays for context.
+### Optional Concept - `concepts/label.md`
 
 ```markdown
 ---
-id: rationale.2026-04-12-label-copy-behavior
-date: 2026-04-12
-status: active
+id: concept.label
+title: Label
+related: [concept.maturity]
 ---
 
-# Label copy behavior across users
+# Label
 
-## Context
+A user-visible marker attached to items.
 
-Users were complaining that copying a colleague's item exposed the colleague's
-personal organization labels.
-
-## Rationale
-
-Personal labels are private organizational tools. Treating them as part of
-the item's data leaks user A's mental model to user B.
-
-## Consequence
-
-On copy across users: shared labels follow, personal labels drop.
-Implemented in `copyDocument`.
+Labels behave differently depending on the maturity of the item they attach to.
 ```
 
-### Cross-references
+Concepts remove repetition when many rules share vocabulary. They are not
+required for Know to work.
 
-- `[[concept.label]]` — wiki-style link, indexed into the `links` table.
-- `related:` / `concept:` / `rationale:` in frontmatter — typed links.
+### Cross-References
 
-Both feed the same graph view; pick whichever reads better in prose.
+- `concept:` in rule metadata links a rule to optional vocabulary.
+- `related:` in concept metadata links concepts to each other.
+- `[[concept.label]]` wiki links are indexed into the same link table.
 
 ## Anchors
 
-Anchors connect knowledge to code. Three forms, in order of preference:
+Anchors connect rules to code. Three forms, in order of preference:
 
 | Form      | Example                          | When                           |
 | --------- | -------------------------------- | ------------------------------ |
@@ -201,35 +193,35 @@ Anchors connect knowledge to code. Three forms, in order of preference:
 | `path:`   | `path: src/labels/visibility.ts` | Rule tied to one file          |
 | `glob:`   | `glob: src/labels/**`            | Cross-cutting concern          |
 
-Symbol resolution uses **tree-sitter** at index time (no LSP needed,
-language-agnostic). Resolved anchors record file path + file hash.
+Symbol resolution uses **tree-sitter** at index time: no LSP server, no
+project-wide language service. A resolved symbol anchor records the file path,
+file hash, and file modification time.
 
 Resolution outcomes:
 
-- `resolved` — symbol/path/glob found.
-- `broken-anchor` — symbol no longer exists, or path/glob matches nothing.
+- `resolved` - symbol/path/glob found.
+- `broken-anchor` - symbol no longer exists, or path/glob matches nothing.
 
-## Drift & staleness
+## Drift And Staleness
 
-Two independent dimensions per rule:
+Two dimensions matter per rule:
 
-1. **Anchor health** — does the code still exist?
-   - `resolved` → fine.
-   - `broken-anchor` → strong signal, surfaced loudly.
+1. **Anchor health** - does the referenced code still exist?
+   - `resolved` means the anchor is healthy.
+   - `broken-anchor` means Know cannot find the code the rule points at.
 
-2. **Freshness** — has the anchored code changed since the last review?
-   - File-level hash. Any anchored file changes → rule becomes `stale`.
-   - Stale ≠ wrong. It means _re-confirm intent_.
+2. **Freshness** - has anchored code changed since review?
+   - Any anchored file changed after `reviewed:` makes the rule `stale`.
+   - Stale does not mean wrong. It means re-confirm intent.
 
-### Re-confirming a rule
+### Re-Confirming A Rule
 
-Two mechanisms in v1; we'll see which sticks:
+```bash
+know review <rule-id>
+```
 
-- **(A)** Edit the rule's frontmatter `reviewed: <today>` directly.
-  Git-native, grep-friendly.
-- **(B)** Run `know review <rule-id>` — CLI stamps the date for you.
-
-Both produce the same DB state.
+This stamps `reviewed: <today>` on the rule and re-indexes. You can also edit
+`reviewed:` manually.
 
 ## CLI
 
@@ -237,48 +229,48 @@ Both produce the same DB state.
 | ----------------------- | --------------------------------------------------------------------------- |
 | `know init`             | Scaffold `.knowledge/`, install `AGENTS.md` block + `agent-instructions.md` |
 | `know index`            | Parse files, resolve anchors, write SQLite                                  |
-| `know sync`             | Incremental re-index based on file hashes                                   |
+| `know sync`             | Re-index only when `.knowledge/` files changed                              |
 | `know status`           | Counts: active / stale / broken-anchor rules                                |
-| `know context <path>`   | **The 95% command** — rules, concepts, rationales touching path             |
+| `know context <path>`   | The 95% command: rules and rule-linked context touching a path              |
 | `know query "<sql>"`    | Read-only SQL access                                                        |
 | `know query --schema`   | Print schema + example queries                                              |
-| `know review <rule-id>` | Stamp `reviewed:` in rule frontmatter                                       |
-| `know validate`         | Schema-check files; report dangling refs                                    |
+| `know review <rule-id>` | Stamp `reviewed:` in rule metadata                                          |
 
 ## `know context <path>`
 
-Given a path the agent or human is about to edit, returns everything
-relevant:
+`know context` starts with rules whose anchors touch the target path. Only
+after a rule matches does Know return supporting context such as inline
+rationale and linked concepts.
 
 ```bash
 know context src/labels/visibility.ts
 ```
 
-Output (Markdown, agent-friendly):
+Example output:
 
 ```markdown
 # Knowledge for src/labels/visibility.ts
 
-## Active rules (2)
+## Active rules (1)
 
-### rules.labels.personal-visible-only-to-owner [active, reviewed 2026-04-01]
+### Personal labels are visible only to their creator [active, reviewed 2026-04-01]
 
 Regardless of item maturity, personal labels never leak to other users.
-→ rationale: rationales/2023-08-personal-labels.md
 
-### rules.labels.copy-personal-not-followed [stale: src/labels/visibility.ts changed 2026-04-20]
+Rationale:
 
-…
+Personal labels are private organization state. Showing them to other users
+leaks one user's organization model into another user's workspace.
+
+## Stale rules (1)
+
+### Personal labels are dropped on cross-user copy [stale: src/labels/visibility.ts changed ...]
+
+...
 
 ## Connected concepts
 
-- concept.label — Labels behave differently per item maturity.
-- concept.maturity — see related rules in rules/item-maturity.md
-
-## Recent rationales touching this code
-
-- 2026-04-12 Label copy behavior across users
-- 2023-08 Personal labels privacy
+- concept.label - Label - A user-visible marker attached to items.
 
 ## Broken anchors touching this file
 
@@ -288,77 +280,55 @@ Regardless of item maturity, personal labels never leak to other users.
 Always returns:
 
 1. Active rules whose anchors match the path.
-2. Stale rules (with reason).
-3. Concepts referenced by those rules.
-4. Rationales linked from those rules, newest first.
-5. Broken anchors touching the path (if any).
+2. Stale rules whose anchors match the path, with a reason.
+3. Inline rationale for each returned rule.
+4. Concepts linked from those returned rules.
+5. Broken anchors from the same rule files, if any.
 
-Path-only granularity in v1. `--symbol` is deferred.
+Path-only granularity is v1. `--symbol` is deferred.
 
-## `know query` — read-only SQL
+## `know query` - Read-Only SQL
 
 ```bash
 know query "SELECT id, statement FROM rules WHERE status = 'active'"
 know query --schema
 ```
 
-- Connection opens SQLite with `mode=ro`. No write paths exist.
-- Custom SQL helpers registered at connection time:
-  - `anchors_match(path)` — owner IDs whose anchors match the path.
-  - `concept_neighbors(id)` — linked concept IDs.
+- Connections open SQLite read-only.
+- The `anchors_match(path)` helper is registered at connection time.
+- SQL is the API; there is no server or protocol in v1.
 
-LLMs write SQL fluently — no new protocol required.
-
-## Agent integration
+## Agent Integration
 
 No MCP, no extension. Two files do the work:
 
-- **`AGENTS.md`** — managed block points agents at
+- **`AGENTS.md`** - managed block points agents at
   `.knowledge/agent-instructions.md`.
-- **`.knowledge/agent-instructions.md`** — the runtime contract:
+- **`.knowledge/agent-instructions.md`** - the runtime contract.
 
-```markdown
-# Working in this repository
+For this repository, the instruction is:
 
-Domain knowledge lives in `.knowledge/`. Before editing any file, run:
-
-    know context <path>
-
-Treat returned **active rules** as constraints on your change.
-
-If a rule is **stale**, read its linked rationale. Either:
-
-- confirm the rule still holds — update `reviewed:` (or run `know review <id>`)
-- propose a rule change in the same PR
-
-If a rule has a **broken-anchor**, flag it; the code it referenced no longer
-exists.
-
-For broader queries:
-
-    know query "<sql>"
-    know query --schema
-
-Never write to the SQLite file. Edit `.knowledge/*.md` only.
+```bash
+yarn know context <path>
 ```
 
-This file is the most important file in the system. Iterate on it more than
-on any code.
+That matters because the package binary may not be globally installed. In
+other repositories, use the package-manager invocation that works there.
 
 ## Workflow
 
-```
-edit .knowledge/*.md   →   know index   →   git commit
+```txt
+edit .knowledge/rules/*.md  →  know index  →  git commit
                                   ↑
-                  agent runs `know context <path>` before editing code
+             agent runs package-manager know context before editing code
 ```
 
-## Schema (read model)
+## Schema (Read Model)
 
 ```sql
 CREATE TABLE items (
-  id TEXT PRIMARY KEY,         -- concept.label, rules.labels.<slug>, rationale.<date>-<slug>
-  kind TEXT NOT NULL,          -- concept | rule | rationale
+  id TEXT PRIMARY KEY,         -- concept.label, rules.labels.<slug>
+  kind TEXT NOT NULL,          -- concept | rule
   title TEXT,
   path TEXT NOT NULL,
   body TEXT NOT NULL,
@@ -369,21 +339,14 @@ CREATE TABLE items (
 
 CREATE TABLE rules (
   id TEXT PRIMARY KEY,
-  item_id TEXT NOT NULL REFERENCES items(id),
   statement TEXT NOT NULL,
+  rationale TEXT,
   status TEXT NOT NULL,        -- active | stale | broken-anchor | deprecated
-  rationale_id TEXT,
   reviewed_at TEXT
 );
 
-CREATE TABLE rationales (
-  id TEXT PRIMARY KEY,
-  item_id TEXT NOT NULL REFERENCES items(id),
-  decision_date TEXT
-);
-
 CREATE TABLE anchors (
-  id TEXT PRIMARY KEY,
+  id INTEGER PRIMARY KEY,
   owner_id TEXT NOT NULL,
   kind TEXT NOT NULL,          -- symbol | path | glob
   value TEXT NOT NULL,
@@ -396,252 +359,192 @@ CREATE TABLE anchors (
 CREATE TABLE links (
   from_id TEXT NOT NULL,
   to_id TEXT NOT NULL,
-  relation TEXT                -- wiki | related | concept | rationale
-);
-
-CREATE TABLE embeddings (
-  ref_id TEXT PRIMARY KEY,
-  kind TEXT,
-  vector BLOB,
-  content_hash TEXT
+  relation TEXT                -- wiki | related | concept
 );
 ```
 
-## Indexer flow
+## Indexer Flow
 
-```
-.knowledge/*.md → parse frontmatter + sections
-                → resolve anchors (tree-sitter, glob, path)
+```txt
+.knowledge/*.md → parse rules and optional concepts
+                → resolve rule anchors (tree-sitter, glob, path)
                 → hash anchored files
-                → compare against last index → compute status
-                → write items, rules, rationales, anchors, links
-                → embeddings (optional, for semantic recall)
+                → compare against review date → compute status
+                → write items, rules, anchors, links
 ```
 
-Idempotent. Hash-based incremental re-index. The database is fully
-reproducible from files at any time and is **never** committed to Git.
+The database is reproducible from files and is never committed.
 
 ---
 
-# Part 2 — Design
+# Part 2 - Design
 
-The pragmatic part above tells you _what_ the system does. This part records
-_why_ — the constraints, the principles, and the trade-offs we picked.
+## Problem Framing
 
-## Problem framing
+Codebases accumulate rules that are not in the code: business decisions,
+domain quirks, RBAC subtleties, edge cases, and "this is why it works this
+way" reasoning. When that knowledge lives only in people's heads or scattered
+systems, people and agents make confident changes that violate invariants they
+never saw.
 
-Codebases accumulate rules that aren't in the code: business decisions,
-domain quirks, "this is why we did it like this" reasoning, RBAC subtleties,
-edge cases everyone with tenure remembers. When that knowledge lives only in
-people's heads (or scattered across Confluence, Slack, meeting notes), three
-failure modes recur:
+Know exists to make those rules explicit, versioned, and surfaced exactly
+when they matter: before code is changed.
 
-1. New developers and AI agents make confident changes that violate
-   undocumented invariants.
-2. A person leaves and their knowledge leaves with them.
-3. Domain experts become bottlenecks; reviews get heavier; velocity drops.
+## First Principles
 
-`know` exists to make that knowledge **explicit, versioned, and surfaced
-exactly when it matters** — at the moment of change.
+Stripped down, Know is about **propositions about code that need to be
+re-examined when that code changes**.
 
-## First principles
+Two obligations follow:
 
-What is this system, stripped down? **Propositions about a codebase that
-aren't in the codebase**, with two non-trivial obligations:
+1. **Findability** - when I am about to touch X, I learn which rules touch X.
+2. **Faithfulness** - when X changes, those rules are visibly stale until
+   someone re-confirms them.
 
-1. **Findability** — when I'm about to touch X, I learn what's known about X.
-2. **Faithfulness** — when X changes, the propositions about X are
-   re-examined.
+Everything else is a means to those ends.
 
-Everything downstream — files, SQLite, anchors, drift — is a means to those
-two ends.
-
-### Forcing constraints
+## Forcing Constraints
 
 | Constraint                        | Implication                                                                    |
 | --------------------------------- | ------------------------------------------------------------------------------ |
-| Must survive a person leaving     | No tool lock-in; plain text + Git                                              |
-| Must survive a refactor           | Anchors must be **semantic**, not just line numbers                            |
-| Must survive a rename             | Anchors that move with the code, or are detected as broken                     |
-| Must be cheap to write            | Authoring overhead kills adoption — single file, frontmatter, no IDs to invent |
-| Must be cheap to read for agents  | Small, focused snippets > one giant doc                                        |
-| Must distinguish stale from wrong | A rule from 2022 must be visibly aging, not silently lying                     |
-| Truth lives in code, not docs     | Code is canonical for behavior; knowledge is canonical for _intent_            |
+| Must survive a person leaving     | Plain text + Git                                                               |
+| Must survive a refactor           | Anchors must be semantic where possible                                        |
+| Must survive a rename             | Anchors should move with symbols, or break loudly                              |
+| Must be cheap to write            | One rules file per area, no IDs to invent                                      |
+| Must be cheap to read for agents  | Small focused output from `know context`                                       |
+| Must distinguish stale from wrong | A rule from 2022 must visibly age, not silently lie                            |
+| Truth lives in code, not docs     | Code is canonical for behavior; knowledge is canonical for intent              |
 
 ## Principles
 
-1. **Files are the source of truth.** Markdown + YAML in Git. Editable by
-   humans without tooling.
-2. **SQLite is a disposable read model.** Only the indexer writes to it.
-   Rebuildable from files at any time.
-3. **Knowledge is commentary; code is canonical for behavior.** Knowledge is
-   canonical for _intent_.
-4. **Pre-change awareness beats post-change validation.** The most valuable
-   moment is right before an agent or human touches code.
-5. **Plain SQL is the API.** No MCP, no protocol, no server. Read-only DB
-   open, schema documented for agents.
-6. **Boring beats clever.** Anchors are paths, globs, and symbol names —
-   nothing more.
+1. **Rules are the center.** A rule owns its anchors, status, rationale, and
+   review date.
+2. **Files are the source of truth.** Markdown + YAML in Git.
+3. **SQLite is a disposable read model.** Only the indexer writes to it.
+4. **Knowledge is commentary; code is canonical for behavior.** Knowledge is
+   canonical for intent.
+5. **Pre-change awareness beats post-change validation.**
+6. **Boring beats clever.** Anchors are paths, globs, and symbol names.
 
-## First-class citizens
+## First-Class Citizens
 
-Only four primitives are load-bearing. The test: remove any one, and the
-system fails on a real example.
+Only two primitives are load-bearing:
 
-| Primitive     | What it gives                                                     |
-| ------------- | ----------------------------------------------------------------- |
-| **Concept**   | Vocabulary. The nouns the business cares about.                   |
-| **Rule**      | Constraint. Atomic, reviewable, has a status.                     |
-| **Rationale** | History. The _why_, whether or not an explicit decision was made. |
-| **Anchor**    | The connection to code. The hardest primitive.                    |
+| Primitive  | What it gives                                      |
+| ---------- | -------------------------------------------------- |
+| **Rule**   | Constraint, rationale, review state, and lifecycle |
+| **Anchor** | The connection from a rule to code                 |
 
-### What's deliberately _not_ a first-class citizen
+Everything else is context:
 
-- **The graph.** Emergent — `[[wikilinks]]` plus typed frontmatter refs are
-  enough. A "graph view" is a query, not an architecture.
-- **The database.** Read model. Never mentioned in the authoring loop.
-- **Folders/categories.** Pre-emptive taxonomies always fail. Tags + search
-  beat folders.
-- **Human-invented IDs.** Derived from filename + heading slug.
+| Context       | Role                                                                  |
+| ------------- | --------------------------------------------------------------------- |
+| **Rationale** | Required rule content, usually inline under `### Rationale`           |
+| **Concept**   | Optional vocabulary and grouping for repeated domain nouns            |
+| **Graph**     | Emergent from metadata and wiki links                                 |
+| **Database**  | Read model, not part of the authoring loop                            |
 
-## Key design decisions
+This is the simplification: rationale remains essential, but it is not a
+separate first-class artifact by default. Concepts are useful, but optional.
 
-### Why "rationale" over "decision" or "motivation"
+## Key Design Decisions
 
-- _Decision_ implies an explicit choice was made — often false.
-- _Motivation_ leans personal/subjective ("why I did it").
-- _Rationale_ covers both explicit choices and "this is why it's this way"
-  reasoning without forcing a fiction.
+### Why Inline Rationale
 
-ADRs (Architecture Decision Records) inspired the format, but we don't
-require an explicit decision to have happened.
+Most rules have a 1:1 relationship with their rationale. Splitting that into a
+separate file makes common authoring slower and increases the chance that the
+why is missing, stale, or not read. Inline rationale keeps the constraint and
+the reason together in the `know context` output.
 
-### Why one file per concept area, not one file per rule
+If a rationale becomes large or shared across many rules, it can still be
+linked with normal Markdown. That is an escape hatch, not the default model.
+
+### Why Optional Concepts
+
+Concepts are helpful when a domain noun appears across many rules. They remove
+repetition and give agents vocabulary. But the system still works without
+them, so they should not be treated as required structure.
+
+### Why One File Per Concept Area
 
 Authoring overhead kills adoption. A human reading about labels should open
-**one file** — `rules/labels.md` — and see all the label rules together,
-each as a `##` section. Atomic per-rule files would be more "structured"
-and far less pleasant. The indexer reconstitutes the atoms.
+`rules/labels.md` and see all label rules together, each as a `##` section.
+The indexer reconstitutes those sections into rule rows.
 
-### Why we don't make rationales append-only
+### Why Tree-Sitter, Not LSP
 
-Earlier draft had append-only rationales (ADR-style). We dropped it: Git
-already gives us history, and append-only makes editing typos a ceremony.
-If intent genuinely changes, write a new dated rationale and re-point the
-rule.
+- Language-aware symbol discovery without a running server.
+- Fast and embeddable.
+- Accurate enough for "find this symbol's defining file."
 
-### Why tree-sitter, not LSP
+LSP can be layered in later if a real need appears.
 
-- Language-agnostic, no project context required.
-- Fast, embeddable, no running server.
-- Accuracy is sufficient for "find this symbol's defining file" — which is
-  all we need. We're not doing call-graph analysis.
+### Why File MTime, Not Symbol-Body Hash
 
-LSP would be more accurate but adds significant operational complexity for
-marginal gain. We can layer LSP later if a real need appears.
+Symbol-body hashing requires per-language extraction logic. File-level
+freshness is simple, portable, and good enough for v1. If a large file creates
+too much staleness noise, that is useful pressure to move rule-relevant code
+into a smaller module.
 
-### Why file-hash, not symbol-body hash
+### Why Stale Never Means Wrong
 
-- Symbol-body hashing requires per-language extraction logic and produces
-  noise when imports, helpers, or signatures move.
-- File-hash is dumb, fast, language-agnostic, and good enough.
-- Side benefit: when a rule's anchored file is huge and churns constantly,
-  the staleness signal becomes noisy — which is the system telling you to
-  **extract the rule-relevant code into its own file**. A gentle
-  modularity nudge.
+A file changing does not mean the rule is invalid. It means the rule must be
+re-confirmed:
 
-### Why "stale" never means "wrong"
-
-A file changing doesn't mean the rule is wrong. It means _re-confirm
-intent_. The two transitions:
-
-```
+```txt
 active → stale (anchored file changed)
-stale  → active (reviewer confirms)  OR  → deprecated (rule no longer holds)
+stale  → active (reviewer confirms) OR → deprecated (rule no longer holds)
 ```
 
-This separation matters: it lets the system flag risk without crying wolf.
+### Why Anchor Health And Freshness Are Separate
 
-### Why anchor health and freshness are separate signals
+- `broken-anchor` is loud: the code a rule points at no longer exists.
+- `stale` is quieter: the code exists, but changed after review.
 
-- A rule with a `broken-anchor` is loud — the code it points at no longer
-  exists, so something is definitely off.
-- A rule that's `stale` is quiet — the code still exists, it just changed.
+Conflating those signals would make both less useful.
 
-Conflating the two would produce one less-useful signal.
+### Why No In-Code Anchor Comments In V1
 
-### Why no in-code anchor comments in v1
+Inline source comments such as `// know:rule(...)` would be refactor-robust,
+but they require touching application code to add knowledge. V1 keeps
+knowledge outside the source tree.
 
-- They're the most refactor-robust anchor (they physically travel with the
-  code), but they touch the code itself, which raises the cost of authoring
-  a rule.
-- v1 keeps all knowledge out of the source tree. We can add `// know:rule(...)`
-  later as an opt-in for high-stakes invariants, without changing the file
-  format.
+### Why No Executable Rules In V1
 
-### Why no executable rules in v1
+A rule linked to a passing test is ideal, but many rules are not easily
+mechanizable. V1 proves the awareness loop first.
 
-A rule linked to a passing test is the gold standard — CI literally proves
-it holds. But:
+### Why Pre-Change Awareness, Not CI Bots First
 
-- It only works for mechanizable rules.
-- It adds a new anchor type and a test-runner integration.
-- v1 should prove the _awareness_ loop first; mechanization comes after.
+The highest leverage moment is before the edit. For AI agents, the right rule
+in prompt context is more valuable than a post-hoc warning after code has
+already been changed.
 
-### Why pre-change awareness, not CI / PR bots
+### Why SQL, Not MCP
 
-We considered the full surface (pre-commit hooks, CI checks, PR comment
-bots, IDE CodeLens). The single highest-leverage point is **before** the
-edit happens:
+LLMs can write SQL, SQLite has a stable read-only mode, and no server lifecycle
+is required. MCP can be added later without changing the authoring model.
 
-- A bug prevented is a bug not written, reviewed, or shipped.
-- For AI agents, the right rule in the prompt is worth a hundred
-  post-hoc warnings.
-- A PR bot can be added later in a few hundred lines once the indexer
-  exists. The data model doesn't change.
+### Why `know context` Starts From Rules
 
-So v1 ships exactly one awareness mechanism: `know context <path>`,
-invoked by humans manually and by agents per `agent-instructions.md`.
+This is the main UX rule: a path should return rules touching that path, and
+only then supporting context reached through those rules. Directly anchored
+concepts are not enough to trigger output. This keeps `know context` focused on
+the constraints that can be broken by the pending change.
 
-### Why SQL, not MCP
+## Prior Art
 
-- LLMs write SQL fluently, with zero new tooling.
-- No protocol, no server, no auth, no lifecycle.
-- Read-only is enforced at the driver (`mode=ro`), not via SQL parsing.
-- A few registered helper functions (`anchors_match`, `concept_neighbors`)
-  hide the join complexity so common queries are one-liners.
+| System                              | Borrowed idea                                                        |
+| ----------------------------------- | -------------------------------------------------------------------- |
+| ADRs                                | Capture the why, but inline by default here                          |
+| Docs-as-code                        | Markdown in repo, reviewed via PR                                    |
+| CODEOWNERS                          | Tiny, glob-based, repo-native metadata                               |
+| Sourcegraph / LSP / tree-sitter     | Symbol references survive simple moves                               |
+| Cursor/Copilot rules, AGENTS.md     | Agents read short scoped instruction files                           |
+| Obsidian / Logseq                   | Wiki links are lightweight graph syntax                              |
+| Pact / property-based tests         | Executable rules are the long-term ideal                             |
 
-MCP can be layered on later if a real integration demands it. The data
-model doesn't change.
-
-### Why `know context` returns more than rules
-
-A rule without its rationale is half-useful: an agent given the constraint
-but not the reasoning can't tell whether a proposed change is a violation
-or a legitimate update of intent. So `know context` always returns:
-
-- Active rules (the constraints).
-- Stale rules with their reason (the things to re-confirm).
-- Connected concepts (the vocabulary).
-- Recent rationales (the why).
-- Broken anchors touching the path (the loud signal).
-
-This is the single most important UX decision in the system.
-
-## Prior art we borrowed from
-
-| System                              | What we stole                                                                   |
-| ----------------------------------- | ------------------------------------------------------------------------------- |
-| **ADRs**                            | Dated rationale files; the "why" as a first-class artifact                      |
-| **Docs-as-code / Diátaxis**         | Markdown in repo, reviewed via PR, separation of concept vs reference           |
-| **`CODEOWNERS`**                    | Tiny, glob-based, parsed by tooling, lives in repo. Boring and effective        |
-| **Sourcegraph / LSP / tree-sitter** | Symbol references survive renames                                               |
-| **Cursor/Copilot rules, AGENTS.md** | Agents will read short, scoped instruction files                                |
-| **Obsidian / Logseq**               | `[[wikilinks]]` are the lightest possible graph syntax                          |
-| **Pact / property-based tests**     | The deepest idea — an executable rule never silently rots (deferred to post-v1) |
-| **Semgrep / CodeQL**                | Pattern-as-data invariants colocated with intent (deferred)                     |
-
-## Out of scope for v1 (intentional)
+## Out Of Scope For V1
 
 - PR bot / GitHub Action / CI checks
 - IDE extension / CodeLens
@@ -651,37 +554,22 @@ This is the single most important UX decision in the system.
 - Web UI
 - Multi-repo federation
 
-Each is straightforward to add once v1 is dogfooded. None are required to
-prevent the bulk of "I didn't know that rule existed" mistakes — that's
-done by `know context` + `agent-instructions.md`.
+## Future TODOs
 
-## Open questions
-
-1. **Reviewed semantics** — does (A) frontmatter `reviewed:` date or
-   (B) `know review` win in practice? Ship both, decide after one month
-   of real use.
-2. **`know context` output format** — Markdown (default) vs. JSON via
-   `--json`. Probably ship both.
-3. **Embeddings** — useful for "find rules semantically related to this PR
-   description"? Cheap to add behind a feature flag; defer until a real
-   query needs it.
-4. **Naming** — `rationales/` vs. `motivations/`. Decide after writing
-   5–10 real ones and seeing which word fits the prose better.
-5. **Modularity nudge thresholds** — N changes in M weeks. Pick numbers
-   after observing real churn patterns.
+- **Validation.** Add schema/config validation for knowledge files. Apple's
+  Pkl is worth evaluating, along with JSON Schema, CUE, or another validation
+  format that can validate rule metadata without making authoring painful.
+- **Embeddings / semantic recall.** Revisit if path-based anchor retrieval is
+  not enough.
+- **JSON output for `know context`.** Markdown is enough for v1.
+- **Shared rationale links.** Add a documented pattern if real rules show
+  repeated large rationale text.
 
 ## Summary
 
-```
-Code        → what the system does
-Knowledge   → why it does it
-SQLite DB   → how it is queried
+```txt
+Code         → what the system does
+Rules        → what must remain true, and why
+Anchors      → which code can affect those rules
 know context → what gets read at the moment of change
 ```
-
-Result:
-
-- shared understanding across developers
-- structured knowledge for AI agents
-- traceable, versioned domain logic
-- no external infrastructure required
