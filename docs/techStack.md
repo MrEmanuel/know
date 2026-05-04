@@ -1,44 +1,54 @@
-## Know tech stack
+# Know tech stack
 
-The Know system is Rust based tool that connects rules to code. It uses a local SQL database for storing rules, concepts, and links, and a terminal user interface(TUI) built with Ratatui. The CLI is implemented using clap, and the config parser uses serde for parsing the .toml files.
+This document records the implementation choices for Know. System behavior, module boundaries, and workflows are described in `docs/systemModules/`.
 
-### treesitter
+## Language and runtime
 
-Connects links to source code.
-Makes code reference in CLI clickable.
+Know is implemented in Rust.
 
-### sqlite
+Rust is a good fit because Know is a local CLI tool that needs fast startup, predictable filesystem access, portable binaries, and embeddable parsing/indexing libraries.
 
-local sql database, with semantic vector search.
+## Command-line interface
 
-/// Need to think through the connections here. What EXACTLY are we storing!?
-// How are souce code stored? globs resolved (original still stored)
-// Do we need to store any source code? Can we rely on treesitter instead?
+The command-line interface uses `clap`.
 
-- All the data from the raw .toml files.
-- Parsed .toml file data (resolved globs, etc)
+`clap` owns command definitions, argument parsing, flags, help output, and shell completion support. Command behavior is described in `docs/systemModules/CLI.md`.
 
-### clap
+## Terminal interface
 
-rust-based CLI using clap. Sequence of commands and options described in CLI.md
+The interactive terminal interface uses `Ratatui`.
 
-### Ratatui
+`Ratatui` owns terminal layout, keyboard interaction, panes, lists, and modals. TUI behavior is described in `docs/systemModules/TUI.md`.
 
-Rust-based Ratatui. Used for the TUI, described in TUI.md
+## Config parsing
 
-#### Serde
+Know source files are TOML and are parsed through `serde`.
 
-Rust-based parser, using serde. Used for the config parser, described in configParser.md
+`serde` owns deserialization into typed config structs. Validation, normalization, and indexing are system concerns, not serde concerns.
 
-// TODO: Rewrite this section to be based on the actual tech stack used, not the modules.
+## Code target resolution
 
-### Config validator
+Tree-sitter is used for language-aware code analysis.
 
-### Link validator
+Symbol targets use Tree-sitter where a supported grammar exists. Unsupported languages or unresolved symbols should fail loudly or remain unverified rather than silently guessing.
+TODO: should file paths and globs also use treesitter?
 
-Validates the relationship rule - link - code
-It uses hashes as source of truth. If the code changes, the link becomes unvalidated, and needs to be validated again. This ensures that the rules are always up to date with the code they reference.
+## Local read model
 
-### SQL database
+SQLite is the generated local read model.
 
-A local SQL database, using sqlx, and a vector addon/plugin for semantic search.
+The durable source of truth is the `.know` TOML files. SQLite can be deleted and rebuilt from those files. The indexer is the only writer; command and TUI flows read from it.
+
+Rust access to SQLite uses `sqlx`.
+
+## Semantic search
+
+Semantic search is implemented as a generated index attached to the local read model.
+
+The exact vector extension/model is not yet selected. The system design should only assume that semantic search can index rules, concepts, and inline rule links, and that the index can be regenerated from source files.
+
+## Filesystem matching
+
+Glob and path resolution should use a dedicated Rust glob/matcher library rather than ad hoc string matching.
+
+The exact crate is not yet selected. The important implementation requirement is deterministic matching from the repository root, with ignored/generated files handled consistently.

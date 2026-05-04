@@ -1,41 +1,52 @@
-# Config syntax.
+# Config syntax
 
-Defintions and examples of the syntax used in the .toml config files for rules, links, and concepts.
+Definitions and examples of the syntax used in the .toml config files for rules and concepts.
 
-Tags can be added to rules, links, and concepts for better organization and discoverability. They can be used for filtering and searching in the CLI and TUI.
+Tags can be added to rules, inline links, and concepts for better organization and discoverability. They can be used for filtering and searching in the CLI and TUI.
+
+Links are defined inline under rules. The source-of-truth relationship is the rule-code pair: a specific rule claims relevance to a specific code target. Each inline link owns its own verification status, even when multiple rules point to the same file, glob, or symbol.
 
 ## Rules
 
 ```toml
 [[rules]]
-id = "rule1"
-description = "This is a rule that describes a business constraint or requirement."
-rationale = "This is the rationale behind the rule, explaining why it exists and what it aims to achieve."
-concepts = ["concept1", "concept2"]
-links = ["link1", "link2"]
-tags = ["tag1", "tag2"]
+id = "customer-email-immutable"
+description = "Customer email addresses must not be changed after verification."
+rationale = "Email is used as the durable identity key for billing and audit history."
+concepts = ["customer-identity"]
+tags = ["billing", "identity"]
+
+[[rules.links]]
+target = "src/customer/email.ts"
+kind = "path" # path | glob | symbol
+status = "verified" # verified | unverified | broken
+verified_at = "2026-05-04T10:00:00Z"
+verified_rule_fingerprint = "sha256:..." # TODO: For globs that are resolved to multiple files, how do we handle fingerprinting and verification?
+verified_target_fingerprint = "sha256:..."
+
+[[rules.links]]
+target = "src/customer/**/*.ts"
+kind = "glob"
+status = "unverified"
 ```
 
-## Links
+## Inline links
 
 ```toml
-[[links]]
-id = "link1"
-links = [
-    "src/utils.ts",
-    "src/**/*.ts",
-    "src/index.ts:myFunction"
-]
-status = "validated" # valid | unvalidated | broken
-
+[[rules.links]]
+target = "src/index.ts:myFunction"
+kind = "symbol"
+status = "unverified"
+tags = ["entrypoint"]
 ```
+
+New links may omit `status`; the validator treats them as `unverified`. Fingerprint fields are written by the validator when a rule-link pair is verified.
 
 ## Concepts
 
 ```toml
 [[concepts]]
-id = "concept1"
-description = "This is a concept that describes a high-level idea or abstraction that is relevant to the project. Many rules that relate to the same concept can reference it in one place.
+id = "customer-identity"
+description = "Customer identity is the durable identity model used for billing, access, and audit history."
 tags = ["tag1", "tag2"]
-
 ```

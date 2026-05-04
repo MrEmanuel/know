@@ -1,6 +1,6 @@
 # Know - Connect business rules to code
 
-For more indepth information on the system design, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the systemDocs directory.
+For more indepth information on the system design, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the docs directory.
 
 ## Why Know?
 
@@ -47,7 +47,7 @@ Know solves many of these problems.
 Know provide users, AI-agents and managers a system that is easy to browse, edit and maintain, and that surfaces relevant rules at the right time, when code is being edited. It gives developers and AI-agents the context they need to make informed decisions, and it gives managers confidence that the rules are being followed, even as the code evolves.
 
 /// Speculation:
-In theory, a user could edit the system rules, making them unvalidated, have an AI-agent go through them, discover the unvalid rules, and be instructed to update the code to fit the new rule. This would mean that the rules would guide the system, and the system developer (I.e the AI-agent). A new paradigm similar to test-driven development, but with rules instead of tests. This is a long-term vision, and not the current state of the system, but it's an interesting possibility to consider.
+In theory, a user could edit the system rules, making related links unverified, have an AI-agent go through them, discover the unverified rule-code pairs, and be instructed to update the code to fit the new rule. This would mean that the rules would guide the system, and the system developer (I.e the AI-agent). A new paradigm similar to test-driven development, but with rules instead of tests. This is a long-term vision, and not the current state of the system, but it's an interesting possibility to consider.
 
 # Part 2 - Design
 
@@ -93,7 +93,7 @@ Everything else is a means to those ends.
 
 1. **Rules are the center.** A rule owns its anchors, status, rationale, and
    review date.
-2. **Files are the source of truth.** Markdown + YAML in Git.
+2. **Files are the source of truth.** TOML in Git.
 3. **Git is used for versioning, not the system itself.** The system only tracks the current state of rules and links, and relies on git for historical changes and versioning.
 4. **SQLite is a disposable read model.** Only the indexer writes to it.
 5. **Knowledge is commentary; code is canonical for behavior.** Knowledge is canonical for intent.
@@ -107,13 +107,13 @@ Only two primitives are load-bearing:
 | Primitive | What it gives                      |
 | --------- | ---------------------------------- |
 | **Rule**  | Description, rationale and context |
-| **Link**  | The connection from a rule to code |
+| **Link**  | A verified rule-code relationship  |
 
 Other primities are helpful but optional:
 | Primitive | What it gives |
 | ---------- | ---------------------------------- |
 | **Concept** | A way to group rules by domain noun, and give agents a shared vocabulary. |
-| **Tag** | A way to group rules, links, and concepts by any arbitrary label. Useful for organization, discoverability, querying and semantic search |
+| **Tag** | A way to group rules and concepts by any arbitrary label. Useful for organization, discoverability, querying and semantic search |
 
 ## Key Design Decisions
 
@@ -124,6 +124,14 @@ separate file makes common authoring slower and increases the chance that the
 why is missing, stale, or not read. Inline rationale keeps the constraint and
 the reason together in the `know context` output.
 
+### Why Inline Links
+
+A link is the relationship between one rule and one code target. That
+relationship owns its own verification status, because the same code can be
+verified for one rule and unverified for another. Keeping links inline under
+rules makes the source file match that ownership model, while the parser and
+SQLite read model can still treat links as first-class records internally.
+
 ### Why Optional Concepts
 
 Concepts are helpful when a domain noun appears across many rules. They remove
@@ -133,8 +141,9 @@ them, so they should not be treated as required structure.
 ### Why One File Per Concept Area
 
 Authoring overhead kills adoption. A human reading about labels should open
-`rules/labels.md` and see all label rules together, each as a `##` section.
-The indexer reconstitutes those sections into rule rows.
+`rules/labels.toml` and see all label rules together as `[[rules]]` entries.
+The indexer reconstitutes those entries and their inline links into rule and
+link rows.
 
 ### Why Tree-Sitter, Not LSP
 
@@ -143,13 +152,6 @@ The indexer reconstitutes those sections into rule rows.
 - Accurate enough for "find this symbol's defining file."
 
 LSP can be layered in later if a real need appears.
-
-### Why File MTime, Not Symbol-Body Hash
-
-Symbol-body hashing requires per-language extraction logic. File-level
-freshness is simple, portable, and good enough for v1. If a large file creates
-too much staleness noise, that is useful pressure to move rule-relevant code
-into a smaller module.
 
 ### Why Stale Never Means Wrong
 

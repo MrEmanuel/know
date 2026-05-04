@@ -1,8 +1,8 @@
-# Know system design
+# Know system modules
 
-This document describes the overall system design of Know, including its components, their interactions.
+This document describes Know's system modules and how they interact. It is intentionally implementation-agnostic; concrete library and runtime choices belong in `docs/techStack.md`.
 
-For specific details on the CLI commands, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the systemDocs directory.
+For specific details on the CLI commands, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the docs directory.
 
 ## System modules
 
@@ -12,17 +12,17 @@ Shared core logic, data structures, and utilities used across the system.
 
 ### cli
 
-The command-line interface for Know, implemented in Rust using clap. It provides various commands for interacting. The cli is the main entry point for users to interact with the system. It can start the interactive TUI, execute commands, and perform operations like indexing, searching, and validating.
+The command-line interface is the main entry point for direct user and agent interaction. It starts the interactive interface, executes commands, and performs operations like indexing, searching, validating, and retrieving context.
 
 ### tui
 
-A terminal user interface built with Ratatui, allowing users to browse and edit rules, concepts, and links in an interactive way.
+The interactive terminal interface allows users to browse and edit rules, concepts, and inline rule links.
 
 ### config parser
 
-ETL format parser, extracting relevant information from the config files, transforming it into a structured format, and loading it into the local SQL database. This includes resolving globs, extracting rules, concepts, links, and other relevant information from the config files.
+Transforms schema-valid source files into the generated read model. This includes extracting rules, concepts, and inline rule links, then normalizing them into queryable records.
 
-SQL database schema design and vector embedding generation for semantic search are also part of the config parser's responsibilities.
+The parser also prepares data needed by the semantic search index. Concrete storage and semantic-search implementation choices belong in `docs/techStack.md`.
 
 ### config validator
 
@@ -30,40 +30,42 @@ Ensures that the configuration files provided by the user are correct, complete,
 
 ### link validator
 
-1. User defines a link between a rule and code.
-2. Link validator checks both files exist.
-3. It hashes the rule.
-4. It hashes the code.
-5. User validates the link.
-6. The result is saved. (in relevant links/\*.toml file, and parsed and stored in the local sql db)
-7. Later, if any hash/version changes, the link becomes unvalidated.
+1. User defines an inline link under a rule.
+2. Link validator resolves the link target and checks that the referenced code exists.
+3. It fingerprints the owning rule.
+4. It fingerprints the resolved code target or targets.
+5. User verifies the rule-link pair.
+6. The result is saved back into the owning rule source file and then re-indexed into the generated read model.
+7. Later, if the rule fingerprint or target fingerprint changes, that rule-link pair becomes unverified.
 
 A link can be either:
 
-Valid | Unvalidated | Invalid
+Verified | Unverified | Broken
 
-Valid if it's not invalid, and has been validated.
-Unvalidated if the code or the rule has changed since the last validation, but it has not been checked again.
-Invalid if the code or the rule it links to does not exist, or if the link itself is not properly defined.
+Verified if the rule-link pair has been reviewed after the current rule and code fingerprints were recorded.
+Unverified if the code or the rule has changed since the last verification, or if the link has never been verified.
+Broken if the code target no longer resolves, or if the link itself is not properly defined.
+
+Verification status belongs to each rule-link pair. If two rules point to the same code target, each relationship is verified independently.
 
 When a link needs to be mended, the system will notify the user in multiple ways:
 
 - CLI output
 - TUI notifications/modal popup and a notification dot
   Options below are speculative, future features:
-- git hooks - pre-commit hook that checks for unvalidated links and prevents commit, or at least warns the user.
-- Github actions
-- Github agent
+- git hooks - pre-commit hook that checks for unverified links and prevents commit, or at least warns the user.
+- GitHub actions
+- GitHub agent
 - Jira integration
 
 TODO: Define the work flow for mending links, and the user experience around it.
 
-Links keep track of when a link was updated, and when the code it links to was updated. A verified link (e.g verified rule through a link) has to be newer than the code it links to. If the code is updated, the link becomes unverified, and needs to be verified again. This ensures that the rules are always up to date with the code they reference.
+Links keep track of when the rule-link pair was verified, the rule fingerprint at that time, and the code target fingerprint at that time. A verified link has to match the current rule and code fingerprints. If the code or the rule is updated, the link becomes unverified and needs to be verified again. This ensures that the rules are always up to date with the code they reference.
 
 Historical changes are documented in git. Not by the know system itself. The know system only documents the current state of the links, rules, and concepts.
 
-### database
+### read model
 
-A local SQL database,with a schema designed to store the parsed rules data. The SQL database is the L in the ETL system, and is considered ephemeral, as it's only a local cache of the data from the .toml files. The source of truth is always the .toml files, and the SQL database can be recreated at any time by re-parsing the .toml files.
+The generated read model stores normalized rule, concept, link, target, and search data. It is ephemeral: the source of truth is always the source files, and the read model can be recreated at any time by re-indexing those files.
 
-The SQL database is only written to by the config indexer, and read-only for all other purposes. The SQL database is used to provide fast access to the rules data for the CLI and TUI, and to provide semantic search capabilities through vector embeddings.
+The read model is only written to by the indexer, and read-only for all other purposes. It provides fast access to rules data for command-line and interactive flows, and provides the query surface for semantic search.

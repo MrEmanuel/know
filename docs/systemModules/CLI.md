@@ -1,19 +1,19 @@
-## Know CLI
+# Know CLI
 
-The know command without any arguments will start the CLI, giving the user options of commands to choose from.
+The `know` command without any arguments starts an interactive command selection flow.
 
-Does not have it's own logic. Strictly a way to call the different modules of the system.
+The command interface does not own domain logic. It delegates to the underlying system modules.
 
 Know has the following commands:
 
 ### know context
 
 The Know systems main feature.
-Return relevant rule, concept and reason data for a given symbol, glob, or path. Takes the input, queries the db for resolved links, and returns relevant rules.
+Return relevant rule, concept and rationale data for a given symbol, glob, or path. Takes the input, queries the generated read model for resolved links, and returns relevant rules.
 
 ### know browse
 
-Opens the TUI, an interactive terminal user interface to browse and edit rules, concepts, and links.
+Opens the TUI, an interactive terminal user interface to browse and edit rules, concepts, and inline rule links.
 
 ### know help
 
@@ -25,7 +25,7 @@ Information about the know cli and the know system in general.
 
 ### know init
 
-Initialze the .know directory with its' sub-folders, and example definition files (rules.toml, links.toml, and concepts.toml).
+Initialize the .know directory with its sub-folders, and example definition files. The rules example includes inline links.
 
 #### flags
 
@@ -34,7 +34,7 @@ Initialze the .know directory with its' sub-folders, and example definition file
 
 ### know query
 
-Execute arbitrary, read-only sql query to the local know database.
+Execute a read-only query against the generated read model. This is primarily a diagnostic and power-user command.
 
 ### know search
 
@@ -46,7 +46,7 @@ Parses and validates the files in the .know directory.
 
 ### know index
 
-Validate and parse the .know file structure, index data in local sql db (including embeddings for semantic search).
+Validate and parse the .know file structure, then update the generated read model and semantic search index.
 
 ### know sync/watch
 
@@ -88,8 +88,9 @@ Option descriptions:
 
 - Add links(s) to rule(s)
   - multi select rules
-    - add concept
-    - multi-select links
+    - add inline link
+    - path, glob, or symbol target
+    - link kind
       - show dry-run or overview of result
         - y/n
 
@@ -98,23 +99,25 @@ Option descriptions:
     - add concept
     - multi select concepts
 
-- Add reson(s) to rule(s)
+- Add reason(s) to rule(s)
   - multi select rules
-    - add reson
-    - multi select resons
+    - add reason
+    - multi select reasons
 
 ### know links
 
-// TODO: does it even make sense to have links by themselves?!
-// They must be connected to a rule to motivate their existance.
+Manage inline rule links. A link cannot exist without an owning rule.
 
 - Add new link
+  - select owning rule
   - file path, glob or symbol
-  - rule(s)
-- Select existing link(s)
+  - link kind
+- Select existing rule link(s)
   - edit link
     - file path, glob or symbol
-    - rule(s)
+    - link kind
+    - tags
+  - verify or re-verify link
 - Add link(s) to rule(s)
 
 ### know concepts
