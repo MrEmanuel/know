@@ -1,6 +1,7 @@
 # Know - Connect business rules to code
 
 For more indepth information on the system design, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the docs directory.
+Ideas for possible future development are collected in `docs/futureIdeas.md`.
 
 ## Why Know?
 
@@ -46,9 +47,6 @@ It's also a huge blind spot for AI agents, which have no way to access that know
 Know solves many of these problems.
 Know provide users, AI-agents and managers a system that is easy to browse, edit and maintain, and that surfaces relevant rules at the right time, when code is being edited. It gives developers and AI-agents the context they need to make informed decisions, and it gives managers confidence that the rules are being followed, even as the code evolves.
 
-/// Speculation:
-In theory, a user could edit the system rules, making related links unverified, have an AI-agent go through them, discover the unverified rule-code pairs, and be instructed to update the code to fit the new rule. This would mean that the rules would guide the system, and the system developer (I.e the AI-agent). A new paradigm similar to test-driven development, but with rules instead of tests. This is a long-term vision, and not the current state of the system, but it's an interesting possibility to consider.
-
 # Part 2 - Design
 
 ## Problem Framing
@@ -72,7 +70,7 @@ re-examined when that code changes**.
 Two obligations follow:
 
 1. **Findability** - when I am about to touch X, I learn which rules touch X.
-2. **Faithfulness** - when X changes, those rules are visibly stale until
+2. **Faithfulness** - when X changes, those rules are visibly unverified until
    someone re-confirms them.
 
 Everything else is a means to those ends.
@@ -84,9 +82,9 @@ Everything else is a means to those ends.
 | Must survive a person leaving     | Plain text + Git                                                  |
 | Must survive a refactor           | Links must be semantic where possible                             |
 | Must survive a rename             | Links should move with symbols, or break loudly                   |
-| Must be cheap to write            | One rules file per area, no IDs to invent                         |
+| Must be cheap to write            | One rules file per area, no opaque IDs to invent                  |
 | Must be cheap to read for agents  | Small focused output from `know context`                          |
-| Must distinguish stale from wrong | A rule from 2022 must visibly age, not silently lie               |
+| Must distinguish unverified from wrong | A rule from 2022 must visibly age, not silently lie          |
 | Truth lives in code, not docs     | Code is canonical for behavior; knowledge is canonical for intent |
 
 ## Principles
@@ -98,7 +96,8 @@ Everything else is a means to those ends.
 4. **SQLite is a disposable read model.** Only the indexer writes to it.
 5. **Knowledge is commentary; code is canonical for behavior.** Knowledge is canonical for intent.
 6. **Pre-change awareness beats post-change validation.**
-7. **Boring beats clever.** Links are paths, globs, and symbol names.
+7. **Stable slugs beat opaque IDs.** Rules and concepts have required human-readable IDs that can be suggested by the CLI or TUI.
+8. **Boring beats clever.** Links are paths, globs, and symbol names.
 
 ## First-Class Citizens
 
@@ -122,7 +121,8 @@ Other primities are helpful but optional:
 Most rules have a 1:1 relationship with their rationale. Splitting that into a
 separate file makes common authoring slower and increases the chance that the
 why is missing, stale, or not read. Inline rationale keeps the constraint and
-the reason together in the `know context` output.
+the reason together in the `know context` output. Rationale is required for
+every rule.
 
 ### Why Inline Links
 
@@ -131,6 +131,8 @@ relationship owns its own verification status, because the same code can be
 verified for one rule and unverified for another. Keeping links inline under
 rules makes the source file match that ownership model, while the parser and
 SQLite read model can still treat links as first-class records internally.
+Links do not have source-defined IDs; their identity is scoped to the owning
+rule.
 
 ### Why Optional Concepts
 
@@ -150,8 +152,6 @@ link rows.
 - Language-aware symbol discovery without a running server.
 - Fast and embeddable.
 - Accurate enough for "find this symbol's defining file."
-
-LSP can be layered in later if a real need appears.
 
 ### Why Stale Never Means Wrong
 
@@ -192,16 +192,4 @@ the constraints that can be broken by the pending change.
 | Sourcegraph / LSP / tree-sitter | Symbol references survive simple moves      |
 | Cursor/Copilot rules, AGENTS.md | Agents read short scoped instruction files  |
 | Obsidian / Logseq               | Wiki links are lightweight graph syntax     |
-| Pact / property-based tests     | Executable rules are the long-term ideal    |
-
-## Some Feature ideas
-
-- PR bot / GitHub Action / CI checks
-- IDE extension / CodeLens
-- In-code link comments
-- Executable rule links (`test:`)
-- Symbol-level `know context --symbol`
-- Web UI
-- Multi-repo federation
-- Rule link in-code
-- Connect rules to tests
+| Pact / property-based tests     | Rules can be connected to executable checks |

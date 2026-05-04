@@ -23,6 +23,18 @@ List all commands
 
 Information about the know cli and the know system in general.
 
+### know report
+
+Produce an overview of the current Know system state. The report summarizes rules, concepts, links, verification state, broken targets, unverified relationships, tags, and coverage by file or target.
+
+Useful options include:
+
+- format - text, markdown, or json
+- output - print to stdout or write to a file
+- include - all, verified, unverified, broken, rules, concepts, links, tags, coverage
+- group-by - rule, concept, tag, file, target, or status
+- fail-on - unverified, broken, or any issue
+
 ### know init
 
 Initialize the .know directory with its sub-folders, and example definition files. The rules example includes inline links.
@@ -44,6 +56,8 @@ Semantic search for any rules, concepts, or (clickable) links. Returns an intera
 
 Parses and validates the files in the .know directory.
 
+By default, `know check` prints a concise system report with counts and actionable issues. A clean check should make it obvious that all rule-link-code relationships are verified.
+
 ### know index
 
 Validate and parse the .know file structure, then update the generated read model and semantic search index.
@@ -54,7 +68,7 @@ Automatically index .know files when they change.
 
 ### know rules
 
-Add or edit rules. id, descriptions, links, and concepts.
+Add or edit rules. id, description, rationale, links, and concepts.
 
 Options shown:
 
@@ -62,27 +76,22 @@ Options shown:
 - Select existing rule
 - Add link(s) to rule(s)
 - Add concept(s) to rule(s)
-- Add reason(s) to rule(s)
 
 Option descriptions:
 
 - Add new rule
   - rule-id
   - description
+  - rationale
   - insert concept(s)
-    - Add new
-    - Select existing (multi select)
-  - insert reason(s)
     - Add new
     - Select existing (multi select)
 
 - Select existing rule
   - edit rule-id
   - edit description
+  - edit rationale
   - edit concept(s)
-    - Add new
-    - Edit existing
-  - edit reason(s)
     - Add new
     - Edit existing
 
@@ -98,11 +107,6 @@ Option descriptions:
   - multi select rules
     - add concept
     - multi select concepts
-
-- Add reason(s) to rule(s)
-  - multi select rules
-    - add reason
-    - multi select reasons
 
 ### know links
 

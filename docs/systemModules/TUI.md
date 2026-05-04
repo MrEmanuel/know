@@ -15,7 +15,7 @@ Rules tab is the main window.
 
 Three columns:
 Left: Scrollable rules list
-Middle: Rule aggregated data of title, descriptions, concepts and inline links. Concepts and links are scrollable, selectable. When highlighted, they are shown in rightmost pane.
+Middle: Rule aggregated data of title, description, rationale, concepts and inline links. Concepts and links are scrollable, selectable. When highlighted, they are shown in rightmost pane.
 Right: Code preview window.
 When highlighting a link, the preview window shows the resolved code target and the associated link metadata.
 When highlighting a concept, the concept is previewed
