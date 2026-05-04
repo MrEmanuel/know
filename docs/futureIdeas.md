@@ -16,6 +16,20 @@ This would let rules guide system development in a way that resembles test-drive
 - GitHub agent.
 - Jira integration.
 
+## Verification governance
+
+Verification could optionally require more than one person, specific people, or a defined review process before a rule-link-code relationship is considered verified.
+
+Examples:
+
+- require approval from a domain owner for rules tagged with a business area
+- require approval from a security reviewer for security-sensitive rules
+- require two independent reviewers for high-risk relationships
+- require a linked ticket, pull request, or external approval record
+- require verification through a formal workflow instead of a single local command
+
+This would make verification stronger for teams with compliance, security, or domain-ownership requirements, while preserving simple local verification as the baseline system behavior.
+
 ## Additional product surfaces
 
 - IDE extension.
