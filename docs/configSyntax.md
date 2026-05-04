@@ -74,7 +74,11 @@ link_fingerprint = "sha256:..."
 target_fingerprint = "sha256:..."
 ```
 
-For glob links, `target_fingerprint` represents the sorted resolved target set and each resolved target's content or symbol fingerprint. If a new file starts matching the glob, an existing file stops matching, or a matched target changes, the target fingerprint changes.
+For path links, `target_fingerprint` represents the resolved file's content fingerprint.
+
+For glob links, `target_fingerprint` represents the sorted resolved target set and each resolved file's content fingerprint. If a new file starts matching the glob, an existing file stops matching, or a matched file changes, the target fingerprint changes.
+
+For symbol links, `target_fingerprint` represents the resolved syntax node or symbol body fingerprint. Symbol resolution uses Tree-sitter where a supported grammar exists.
 
 ## Concepts
 

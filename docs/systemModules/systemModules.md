@@ -51,6 +51,10 @@ Verification status belongs to each rule-link-code relationship. If two rules po
 
 Inline links do not have source-defined IDs. The read model may assign internal row IDs, but source files identify links by their owning rule and target metadata.
 
+Path and glob links are resolved through deterministic filesystem matching from the repository root. Their target fingerprints are based on raw file contents and, for globs, the sorted resolved file set. Tree-sitter does not define the identity of path or glob links.
+
+Symbol links are resolved structurally with Tree-sitter where a supported grammar exists. Their target fingerprints are based on the resolved symbol body or syntax node.
+
 When a link needs to be mended, the system will notify the user in multiple ways:
 
 - CLI output

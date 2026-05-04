@@ -26,12 +26,32 @@ Know source files are TOML and are parsed through `serde`.
 
 `serde` owns deserialization into typed config structs. Validation, normalization, and indexing are system concerns, not serde concerns.
 
-## Code target resolution
+## Tree-sitter
 
 Tree-sitter is used for language-aware code analysis.
 
 Symbol targets use Tree-sitter where a supported grammar exists. Unsupported languages or unresolved symbols should fail loudly or remain unverified rather than silently guessing.
-TODO: should file paths and globs also use treesitter?
+
+Tree-sitter also powers code-aware user experience features in the CLI, TUI, read model, and search index where supported grammars are available. These features include:
+
+- syntax-highlighted code previews
+- file outlines for classes, functions, methods, structs, interfaces, and similar symbols
+- breadcrumbs for selected code targets
+- symbol suggestions when authoring links
+- structural folding in previews
+- focused snippets for symbol links
+- nearby symbol context for path and glob links
+- code-aware chunks for semantic search
+- repair suggestions when a symbol link no longer resolves
+- coverage reporting by top-level symbol where the language grammar supports it
+
+Tree-sitter is an enhancement and resolution layer, not the storage source of truth. Source TOML files and `.know/verification.toml` remain authoritative.
+
+## Code target resolution
+
+Path and glob targets are resolved through deterministic filesystem matching from the repository root. Their verification fingerprints are based on raw file contents and resolved file sets, not Tree-sitter syntax nodes.
+
+Tree-sitter may enhance browsing, authoring, previews, search chunking, repair suggestions, and reporting for path and glob targets, but it does not change their source-of-truth identity.
 
 ## Local read model
 
