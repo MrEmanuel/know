@@ -89,7 +89,7 @@ Everything else is a means to those ends.
 
 ## Principles
 
-1. **Rules are the center.** A rule owns its anchors, status, rationale, and
+1. **Rules are the center.** A rule owns its links, status, rationale, and
    review date.
 2. **Files are the source of truth.** TOML in Git.
 3. **Git is used for versioning, not the system itself.** The system only tracks the current state of rules and links, and relies on git for historical changes and versioning.
