@@ -1,8 +1,5 @@
 # Know - Connect business rules to code
 
-For more indepth information on the system design, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the docs directory.
-Ideas for possible future development are collected in `docs/futureIdeas.md`.
-
 ## Why Know?
 
 Know solves the tribal knowledge problem.
@@ -47,6 +44,9 @@ It's also a huge blind spot for AI agents, which have no way to access that know
 Know solves many of these problems.
 Know provide users, AI-agents and managers a system that is easy to browse, edit and maintain, and that surfaces relevant rules at the right time, when code is being edited. It gives developers and AI-agents the context they need to make informed decisions, and it gives managers confidence that the rules are being followed, even as the code evolves.
 
+For more indepth information on the system design, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the docs directory.
+Ideas for possible future development are collected in `docs/futureIdeas.md`.
+
 # Part 2 - Design
 
 ## Problem Framing
@@ -77,15 +77,15 @@ Everything else is a means to those ends.
 
 ## Forcing Constraints
 
-| Constraint                        | Implication                                                       |
-| --------------------------------- | ----------------------------------------------------------------- |
-| Must survive a person leaving     | Plain text + Git                                                  |
-| Must survive a refactor           | Links must be semantic where possible                             |
-| Must survive a rename             | Links should move with symbols, or break loudly                   |
-| Must be cheap to write            | One rules file per area, no opaque IDs to invent                  |
-| Must be cheap to read for agents  | Small focused output from `know context`                          |
-| Must distinguish unverified from wrong | A rule from 2022 must visibly age, not silently lie          |
-| Truth lives in code, not docs     | Code is canonical for behavior; knowledge is canonical for intent |
+| Constraint                             | Implication                                                       |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| Must survive a person leaving          | Plain text + Git                                                  |
+| Must survive a refactor                | Links must be semantic where possible                             |
+| Must survive a rename                  | Links should move with symbols, or break loudly                   |
+| Must be cheap to write                 | One rules file per area, no opaque IDs to invent                  |
+| Must be cheap to read for agents       | Small focused output from `know context`                          |
+| Must distinguish unverified from wrong | A rule from 2022 must visibly age, not silently lie               |
+| Truth lives in code, not docs          | Code is canonical for behavior; knowledge is canonical for intent |
 
 ## Principles
 
