@@ -30,6 +30,24 @@ Authoring commands must not require prompts. When stdin is not interactive, or w
 
 Commands that write source files or verification data should support `--dry-run` where practical, printing the planned change without writing it.
 
+## Self-documenting CLI
+
+The CLI should be self-documenting. A user or agent should be able to query the installed `know` binary to understand its command structure, available flags, accepted values, and intended usage without reading the source code or these design documents first.
+
+The exact implementation is not decided yet. The direction is similar in spirit to tools such as Google's `gwc`, where the CLI can expose structured information about itself for humans, scripts, shell completion, and AI agents.
+
+At minimum, the CLI should make the following discoverable:
+
+- available commands and subcommands
+- command purpose and usage examples
+- flags, argument names, defaults, and accepted values
+- output formats supported by each command
+- whether a command reads, writes, or runs in read-only mode
+- whether a command may prompt interactively
+- which commands are intended for humans, automation, or both
+
+This self-documenting surface should describe the CLI contract, not internal implementation details. It should stay aligned with normal help output and shell completion so Know has one coherent command model.
+
 ## Completion model
 
 Know should support shell completion for commands, subcommands, flags, and known flag values.
