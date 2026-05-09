@@ -171,6 +171,12 @@ verified → unverified (linked file changed)
 unverified → verified (reviewer confirms)
 ```
 
+### Why Verification Is Not Mandatory Or Prescribed
+
+The highest-leverage moment for Know is surfacing rules before code changes. Verification (re-confirmation that a rule still applies) should not create burden for developers. Teams should be able to choose when and how re-verification happens—through tests, code review, pre-commit checks, AI agents, or on-demand audits. Know _detects_ when code changes and marks rules unverified; it does not mandate the verification workflow. This flexibility allows teams to integrate Know into existing processes without adding friction.
+
+Unverified rules are clearly visible in reports and `know list`, making them visible debt without creating panic. A developer editing a file multiple times should not be bothered by Know warnings; nudges in reports and pre-change context are the right level of signal.
+
 ### Why Link Health And Freshness Are Separate
 
 - `broken` link is loud: the code a rule points at no longer exists.
@@ -208,6 +214,28 @@ Know connects _specific rules to specific code_. It is not a general system rule
 **Know is not for:** "Our company believes in customer-first design" or "We follow SOLID principles" or general architectural philosophies.
 
 If a rule applies to the entire system (not tied to specific code), it belongs in the repository root—README.md, ARCHITECTURE.md, AGENTS.md, or similar. Know is purposefully scoped to _link-bearing rules_, making it a targeted tool for preventing "I didn't know that rule existed" mistakes in the code being edited. This scope boundary prevents Know from becoming a dumping ground and forces teams to distinguish between general principles (which belong in repo docs) and code-specific constraints (which belong in Know).
+
+### Verification: Flexible, Non-Burdensome, Multi-Party
+
+When code changes, linked rules become `unverified`. **Know does not mandate how or when re-verification happens.** It can occur through multiple pathways:
+
+- **Automated tests**: Executable rules linked to test suites that pass/fail verify the rule
+- **Pre-commit**: Developer runs `know verify` locally before committing
+- **Code review**: Human reviewer or bot confirms the rule during PR review
+- **AI agents**: Agents with appropriate permissions analyze and verify rules in context
+- **On-demand**: Teams run `know check` or report generation to identify and batch-verify stale rules
+
+Know surfaces which rules are unverified (visible but not alarming), allowing teams to choose workflows that fit their process. **The system should nudge, not panic**—unverified rules are clear in reports and context, but not treated as errors that block work.
+
+**AI Agent Verification Gate**: Teams should be able to configure Know to disallow AI agent verification of rules, keeping verification strictly human-controlled if desired. This respects teams that want human judgment on all rule confirmations.
+
+**Multi-Party Verification Workflows**: Know's verification model needs deeper thinking across different stakeholder perspectives:
+
+- **Developers and AI agents** (first priority): Verification should be lightweight, integrated into existing workflows (code review, tests), not add burden
+- **Managers and project leaders** (secondary priority): Need visibility into rule health, stale rules, and coverage across the codebase
+- **Product owners** (secondary priority): Need to understand which rules are actually enforced vs. aspirational
+
+The baseline system focuses on developer and agent workflows; multi-party verification ceremonies are important design questions for v1+ maturity.
 
 ## Prior Art
 
