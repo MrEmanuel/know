@@ -32,10 +32,16 @@ This would make verification stronger for teams with compliance, security, or do
 
 ## Additional product surfaces
 
-- IDE extension.
+- IDE/VS Code extension/plugin.
 - CodeLens.
 - Web UI.
 - Multi-repo federation.
+
+## Product analytics and diagnostics
+
+Know could optionally send usage and diagnostic data so the project can learn how the system is used, which workflows matter most, and what errors users encounter.
+
+This should be designed carefully around privacy, transparency, and user control. Useful signals could include command usage, feature adoption, validation failures, broken-link reasons, performance timings, and anonymized error reports.
 
 ## Additional link types and context targets
 

@@ -46,9 +46,13 @@ Completions should include both static CLI structure and dynamic project-aware v
 - known glob-friendly path prefixes
 - Tree-sitter-backed symbols when a supported grammar is available
 
-Path and glob completion should use deterministic repository-root filesystem discovery. Tree-sitter may improve symbol completion and code-aware suggestions, but it does not define the identity of path or glob targets.
+Path and glob completion should use deterministic repository-root filesystem discovery. Completion respects repository ignore rules, such as `.gitignore`, by default. Tree-sitter may improve symbol completion and code-aware suggestions, but it does not define the identity of path or glob targets.
 
 Completion should remain an aid, not a requirement. All commands must work without shell completion.
+
+CLI commands may accept local OS-style path input from users, but authored source files and generated verification entries must use normalized repository-root-relative paths with `/` separators.
+
+CLI commands may also accept bare symbol input, such as `Invoice.calculateTotal`, when it resolves unambiguously. When writing source files or generated verification entries, Know must store symbol targets in canonical file-scoped `path#symbol` form.
 
 Know has the following commands:
 
@@ -65,17 +69,22 @@ Know should infer the target kind when it is unambiguous:
 
 - Existing repository path - path target
 - Target containing glob syntax - glob target
+- Target in canonical `path#symbol` form - symbol target
 - Otherwise, a Tree-sitter-resolvable code symbol - symbol target
 
 If a target is ambiguous, the command should fail with an actionable message in non-interactive mode. In an interactive terminal, it may ask the user to choose the intended target kind.
 
 Explicit target-kind flags should be available as escape hatches for automation and ambiguous cases.
 
-`know context` reads from the generated read model. It does not rebuild or refresh the read model itself.
+`know context` reads from the generated read model. It does not rebuild or refresh the read model or `.know/linkVerification.lock.toml` itself.
 
 If the read model is missing, `know context` should fail with an actionable message telling the user to run `know index`.
 
 If the read model exists but appears stale, `know context` should warn and use the existing read model by default.
+
+If the read model exists but is incompatible with the current Know version or read-model contract, `know context` should fail with an actionable message telling the user to run `know index`.
+
+Freshness is determined by recomputing the current resolved model, comparing its hash with the `resolved_model_hash` stored in the active SQLite read model, and checking that the active read model was built from the current `.know/linkVerification.lock.toml`. The generated cache is stale when those values differ.
 
 Freshness options:
 
@@ -87,8 +96,10 @@ Useful forms include:
 know context src/billing/invoice.ts
 know context 'src/billing/**/*.ts'
 know context 'src/billing/**/*.ts' --exclude 'src/billing/generated/**'
+know context 'src/billing/invoice.ts#Invoice.calculateTotal'
 know context Invoice.calculateTotal
 know context --kind symbol Invoice.calculateTotal
+know context --count src/billing/invoice.ts
 know context --format json src/billing/invoice.ts
 know context --require-fresh src/billing/invoice.ts
 know index && know context src/billing/invoice.ts
@@ -99,7 +110,10 @@ Useful options include:
 - kind - path, glob, or symbol
 - exclude - exclude pattern for glob targets. May be repeated.
 - format - text or json
+- count - print only the number of matching rules
 - require-fresh
+
+`--count` returns the number of rules that would be included in normal context output for the same target and filters. It is intended for agents and scripts that need to estimate how much rule context exists for a path, glob, or symbol before requesting the full output.
 
 ### know browse
 
@@ -123,7 +137,9 @@ Inspect the local Know runtime and environment.
 
 Print a concise overview of the current Know system state.
 
-`know status` is the fastest way to understand whether the system is healthy. It summarizes the number of rules, concepts, inline links, verified relationships, unverified relationships, broken links, invalid definitions, and index freshness.
+`know status` is the fastest way to understand whether the system is healthy. It summarizes the number of rules, concepts, inline links, unlinked rules, verified relationships, unverified relationships, broken links, invalid definitions, lockfile freshness, and index freshness.
+
+`know status` also reports unlinked rules. Unlinked rules are valid rules with no inline links. They are visible in project health output because they will not appear in target-based `know context`.
 
 The default output is human-readable. For automation, `know status` should support structured output through `--format json`.
 
@@ -133,19 +149,27 @@ The default output is human-readable. For automation, `know status` should suppo
 
 Produce a detailed report of the current Know system state.
 
-`know report` is the fuller and more configurable version of `know status`. It summarizes rules, concepts, links, verification state, broken targets, unverified relationships, tags, and coverage by file or target. It can be used for audits, CI artifacts, pull request comments, and project documentation.
+`know report` is the fuller and more configurable version of `know status`. It summarizes rules, concepts, links, verification state, unlinked rules, broken targets, unverified relationships, stale lockfiles, tags, and coverage by file or target. It can be used for audits, CI artifacts, pull request comments, and project documentation.
 
 Useful options include:
 
 - format - text, markdown, or json
-- output - print to stdout or write to a file
-- include - all, verified, unverified, broken, rules, concepts, links, tags, coverage
+- output - write the report to a file path instead of stdout
+- include - all, verified, unverified, broken, unlinked, stale-lockfile, rules, concepts, links, tags, coverage
 - group-by - rule, concept, tag, file, target, or status
-- fail-on - unverified, broken, or any issue
+
+Useful forms include:
+
+```txt
+know report --format markdown --output know-report.md
+know report --format json --output know-report.json
+```
 
 ### know init
 
 Initialize the .know directory with its sub-folders, and example definition files. The rules example includes inline links.
+
+`know init` also creates `.know/.gitignore` that ignores `cache/`, and creates `.know/cache/` as the location for disposable generated local data.
 
 #### flags
 
@@ -168,7 +192,11 @@ Initial stable views should include:
 - concepts
 - links
 - rule_context
-- verification_status
+- link_verification_status
+- unlinked_rules
+- read_model_metadata
+
+The `link_verification_status` and `unlinked_rules` views expose the status records mirrored from `.know/linkVerification.lock.toml`. This lets `know query`, agents, reports, and TUI flows join current verification state with rules, concepts, resolved targets, and search results without reparsing TOML files.
 
 Useful forms include:
 
@@ -190,23 +218,33 @@ Semantic search for any rules, concepts, or (clickable) links. Returns an intera
 
 Run a read-only health check for the Know system.
 
-`know check` validates the `.know` source files, resolves inline links, derives verification status, and reports actionable issues. It must not write source files, generated indexes, or `.know/verification.toml`.
+`know check` validates the `.know` source files, resolves inline links, derives verification status, and reports actionable issues. It must not write source files, `.know/linkVerification.toml`, `.know/linkVerification.lock.toml`, or generated indexes.
 
-By default, `know check` prints a concise report with counts and actionable issues. A clean check should make it obvious that all rule-link-code relationships are verified.
+`know check` recomputes from the current source files, `.know/linkVerification.toml`, and current repository code. It does not trust an existing generated read model or `.know/linkVerification.lock.toml` for pass/fail decisions. It compares the recomputed expected lockfile with the committed lockfile and reports `stale-lockfile` when they differ.
+
+By default, `know check` prints a concise report with counts and actionable issues. A clean check should make it obvious that all rule-link-code relationships are verified and `.know/linkVerification.lock.toml` is fresh.
 
 `know check` is the CI-oriented command. It exits nonzero when the inspected system violates the selected failure policy.
 
 Useful options include:
 
 - format - text or json
-- fail-on - invalid, unverified, broken, stale-index, or any issue
-- include - all, invalid, unverified, broken, stale-index
+- fail-on - invalid, unverified, broken, unlinked, stale-lockfile, stale-index, or source-issue
+- include - all, invalid, unverified, broken, unlinked, stale-lockfile, stale-index
+
+`source-issue` means any current source-state problem: invalid definitions, broken links, unverified relationships, or unlinked rules. It does not include `stale-lockfile` or `stale-index`, because `know check` recomputes from source and does not depend on generated artifacts for correctness. Workflows that require the committed reflection or generated cache to be fresh should explicitly use `--fail-on stale-lockfile` or `--fail-on stale-index`.
+
+`stale-lockfile` means `.know/linkVerification.lock.toml` is missing, invalid, or differs from the deterministic lockfile Know would generate from the current `.know` source files, `.know/linkVerification.toml`, current repository code, and resolver settings.
+
+`stale-index` means the generated cache is missing, stale, incompatible with the current read-model contract, built against a different normalized lockfile hash, or paired with a semantic-search sidecar whose `resolved_model_hash` does not match SQLite.
 
 ### know verify
 
 Approve or re-approve rule-link-code relationships.
 
-`know verify` is state-changing. It records the current rule, link, and target fingerprints in `.know/verification.toml` for relationships the user has reviewed and approved.
+`know verify` is state-changing. It records the current rule, link, and target fingerprints in `.know/linkVerification.toml` for relationships the user has reviewed and approved.
+
+After updating `.know/linkVerification.toml`, `know verify` recomputes and writes `.know/linkVerification.lock.toml` so the committed reflection shows the newly approved status.
 
 `know verify` should explain what relationships will be verified before writing, and it should support `--dry-run`.
 
@@ -221,13 +259,23 @@ Useful options include:
 
 ### know index
 
-Validate and parse the .know file structure, then update the generated read model and semantic search index.
+Validate and parse the .know file structure, then update the committed link-verification lockfile, generated read model, and semantic search index.
+
+`know index` performs an atomic full rebuild. It recomputes the current resolved model from `.know` source files, `.know/linkVerification.toml`, and current repository code. It writes `.know/linkVerification.lock.toml` and generated cache data to temporary locations and only replaces `.know/linkVerification.lock.toml`, `.know/cache/know.sqlite`, and `.know/cache/semantic/` after validation, parsing, link resolution, lockfile generation, read-model generation, and semantic-index generation all succeed.
+
+If indexing fails, the existing lockfile and cache remain unchanged and the command reports actionable diagnostics.
+
+`know index` is the generated-artifact refresh command. It exists so the committed link-verification reflection is current and read-model-dependent commands such as `know context`, `know search`, and `know browse` can answer quickly from generated local data.
+
+Each successful index run stores `source_model_hash`, `link_verification_hash`, `link_verification_lock_hash`, and `resolved_model_hash` in SQLite. The resolved model records the parser output, approval data, resolver inputs, resolved target sets, target fingerprints, derived link-verification statuses, schema versions, Tree-sitter resolver inputs, and semantic-search configuration used to build the lockfile and cache.
 
 ### know watch
 
-Automatically index .know files when they change.
+Automatically refresh generated Know data when likely inputs change.
 
-`know watch` is the canonical long-running command for keeping the generated read model and semantic search index fresh during local development.
+`know watch` is the canonical long-running command for keeping `.know/linkVerification.lock.toml`, the generated read model, and semantic search index fresh during local development.
+
+`know watch` watches `.know` files, resolver inputs, and linked repository targets where practical. Filesystem events are rebuild triggers only. Freshness is still determined by resolved model hash recomputation and lockfile comparison.
 
 `know sync` is not a canonical command unless a separate synchronization workflow is defined later.
 
@@ -249,6 +297,26 @@ Useful subcommands include:
 - link remove
 - concept add
 - concept remove
+
+`know rule list` should support target-aware filtering for agent workflows that need to inspect or count relevant rules without loading full context output.
+
+Useful forms include:
+
+```txt
+know rule list --target src/billing/invoice.ts --count
+know rule list --target 'src/billing/**/*.ts' --count
+know rule list --target 'src/billing/invoice.ts#Invoice.calculateTotal' --count
+know rule list --target Invoice.calculateTotal --kind symbol --count
+```
+
+Useful options include:
+
+- target - path, glob, or symbol to filter rules by
+- kind - path, glob, or symbol
+- exclude - exclude pattern for glob targets. May be repeated.
+- count - print only the number of matching rules
+
+Target-specific rule counts should use the same target resolution and rule-selection behavior as `know context --count`.
 
 ### know concept
 
