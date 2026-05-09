@@ -49,6 +49,14 @@ Ideas for possible future development are collected in `docs/futureIdeas.md`.
 
 # Part 2 - Design
 
+## Documentation Philosophy
+
+These documents describe what Know is, what problems it solves, and the system contracts that should stay true as the implementation evolves.
+
+They are not intended to replace implementation design in code. Exact data structures, internal algorithms, crate-level module boundaries, and low-level error handling belong in the implementation unless they define externally visible behavior or durable file formats.
+
+The documentation should stay close to the ground truth primitives: rules, links, code targets, verification, and context. When a feature requires a large explanation, that is a signal to restate the problem and ask whether the feature belongs in the baseline system.
+
 ## Problem Framing
 
 "Tribal knowledge is knowledge that is not documented, and only exists in the minds of a few individuals. This creates a risk of knowledge loss if those individuals leave the organization, and makes it difficult for new team members to learn and understand the system."
@@ -181,6 +189,25 @@ already been changed.
 This is the main UX rule: a path should return rules touching that path, and
 only then supporting context reached through those rules. Directly linked concepts are not enough to trigger output. This keeps `know context` focused on
 the constraints that can be broken by the pending change.
+
+### Why Unlinked Rules Are Visible in Reports But Not in Context
+
+Unlinked rules are legitimate temporary work-in-progress—a team has documented a rule but hasn't yet mapped it to code. Unlinked rules should:
+
+- Appear in `know list`, reports, and overviews (so the team sees them as implicit todos)
+- NOT appear in `know context` when querying specific code (they don't apply yet)
+
+This surfaces unlinked rules as work to do, without polluting context at the moment of editing code.
+
+### What Know Is Not: Scope Boundary
+
+Know connects _specific rules to specific code_. It is not a general system rules or principles repository.
+
+**Know is for:** "When editing this billing service, remember that fractional cents must round down per GAAP rules."
+
+**Know is not for:** "Our company believes in customer-first design" or "We follow SOLID principles" or general architectural philosophies.
+
+If a rule applies to the entire system (not tied to specific code), it belongs in the repository root—README.md, ARCHITECTURE.md, AGENTS.md, or similar. Know is purposefully scoped to _link-bearing rules_, making it a targeted tool for preventing "I didn't know that rule existed" mistakes in the code being edited. This scope boundary prevents Know from becoming a dumping ground and forces teams to distinguish between general principles (which belong in repo docs) and code-specific constraints (which belong in Know).
 
 ## Prior Art
 
