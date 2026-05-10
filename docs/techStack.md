@@ -55,15 +55,17 @@ Tree-sitter may enhance browsing, authoring, previews, search chunking, repair s
 
 ## Local read model
 
-SQLite is the generated local read model.
+SQLite is the generated local read model and the operational read projection for normal read commands.
 
 The durable source of truth is the human-authored `.know` TOML files plus `.know/linkVerification.toml`. `.know/linkVerification.lock.toml` is a committed generated reflection, not an approval source. SQLite can be deleted and rebuilt from the current source files, approval file, and repository targets. The indexer is the only writer; command and TUI flows read from it.
+
+Deleting SQLite does not lose project knowledge, but cache-backed read commands such as `know context`, `know rule list`, `know status`, `know report`, `know browse`, `know search`, and `know query` require a compatible generated read model. `know check` is the read-only source-recompute path that validates current source state without trusting the generated cache.
 
 The SQLite database lives at `.know/cache/know.sqlite`. Generated semantic search files live under `.know/cache/semantic/`. The cache directory is ignored by Git.
 
 `know index` performs an atomic full rebuild of the committed lockfile and generated cache. It writes to temporary locations and replaces the active lockfile and cache only after the full indexing pipeline succeeds.
 
-The read model stores `source_model_hash`, `link_verification_hash`, `link_verification_lock_hash`, `resolved_model_hash`, and schema/contract versions used for freshness checks. Freshness is based on recomputing the resolved model and expected lockfile, then comparing them with the stored values and committed lockfile, not on file mtimes alone.
+The read model stores `source_model_hash`, `link_verification_hash`, `link_verification_lock_hash`, `resolved_model_hash`, and schema/contract versions used for freshness checks. `know check` and `know index` prove freshness by recomputing the resolved model and expected lockfile, then comparing them with the stored values and committed lockfile. Normal read commands answer from SQLite and may inspect current files only to detect or enforce freshness; file mtimes alone are not the correctness boundary.
 
 Rust access to SQLite uses `sqlx`.
 

@@ -6,6 +6,22 @@ When stdin is not interactive, bare `know` must not prompt or block. It should p
 
 The command interface does not own domain logic. It delegates to the underlying system modules.
 
+## Read model contract
+
+Know's normal read commands use the generated SQLite read model as their
+operational read surface. They do not use reparsed `.know` source files as
+their normal answer path.
+
+This includes target context, rule listing, rule inspection, status summaries,
+reports, browsing, semantic search, and stable SQL querying. If the read model
+is missing or incompatible, these commands should fail with actionable guidance
+to run `know index`. If the read model is stale, commands should report the
+freshness problem and then follow their command-specific freshness policy.
+
+`know check` is the main exception. It recomputes from the current source files,
+approval file, and repository code in read-only mode so CI and audits can prove
+source health without trusting the generated cache.
+
 ## Design basis
 
 Know follows the [Command Line Interface Guidelines](https://clig.dev/) as the baseline for CLI design decisions.
@@ -29,6 +45,28 @@ Authoring commands may prompt for missing inputs when stdin is an interactive te
 Authoring commands must not require prompts. When stdin is not interactive, or when `--no-input` is passed, commands fail with an actionable error if required input is missing.
 
 Commands that write source files or verification data should support `--dry-run` where practical, printing the planned change without writing it.
+
+## Guided next actions
+
+Know should help users move through the rule lifecycle without requiring them
+to memorize the command graph.
+
+After successful commands, the CLI may recommend the next useful commands for
+the affected rule, link, or target. For example, after creating and linking a
+rule, Know can suggest `know index`, `know context <target>`,
+`know verify --rule <rule-id>`, `know check`, or `know watch`.
+
+When stdin is an interactive terminal, Know may offer these as a short
+selection flow. When stdin is not interactive, or when `--no-input` is passed,
+Know must not prompt or block; it should print recommended commands in normal
+text output, and include structured next-action data in JSON output where that
+command supports `--format json`.
+
+For interactive sessions in a repository, Know should recommend `know watch` as
+the lowest-friction way to keep generated state fresh while the user or agent is
+editing. For short-lived automation and one-shot agent tasks, recommended next
+actions should prefer explicit command chains, such as `know index` followed by
+`know context <target>`.
 
 ## Self-documenting CLI
 
@@ -79,7 +117,10 @@ Know has the following commands:
 The Know systems main feature.
 Return relevant rule, concept and rationale data for a given symbol, glob, or path. Takes the input, queries the generated read model for resolved links, and returns relevant rules.
 
-`know context` accepts one target and returns the rules that apply to that target.
+`know context` accepts one target and returns the rules that apply to that
+target, including each matching relationship's verification status and
+freshness. Unverified relationships are included; they are surfaced as context,
+not filtered out.
 
 Only one target is accepted per command invocation. Globs provide the first-class way to ask about multiple files.
 
@@ -94,15 +135,27 @@ If a target is ambiguous, the command should fail with an actionable message in 
 
 Explicit target-kind flags should be available as escape hatches for automation and ambiguous cases.
 
-`know context` reads from the generated read model. It does not rebuild or refresh the read model or `.know/linkVerification.lock.toml` itself.
+`know context` is a read command. It may inspect enough current state to detect
+stale generated views, but it must not write `.know` source files,
+`.know/linkVerification.toml`, `.know/linkVerification.lock.toml`, or generated
+cache files as a side effect.
 
-If the read model is missing, `know context` should fail with an actionable message telling the user to run `know index`.
+If the read model is missing, `know context` should fail with an actionable
+message telling the user to run `know index`.
 
-If the read model exists but appears stale, `know context` should warn and use the existing read model by default.
+If the read model exists but appears stale, `know context` should warn and use
+the existing read model by default.
 
-If the read model exists but is incompatible with the current Know version or read-model contract, `know context` should fail with an actionable message telling the user to run `know index`.
+If the read model exists but is incompatible with the current Know version or
+read-model contract, `know context` should fail with an actionable message
+telling the user to run `know index`.
 
-Freshness is determined by recomputing the current resolved model, comparing its hash with the `resolved_model_hash` stored in the active SQLite read model, and checking that the active read model was built from the current `.know/linkVerification.lock.toml`. The generated cache is stale when those values differ.
+Freshness is based on the metadata and hashes written with the active read
+model, including `resolved_model_hash` and the hash of
+`.know/linkVerification.lock.toml`. Commands that require fresh output must
+prove the active read model still corresponds to the current source files,
+approval file, lockfile, resolver inputs, and repository targets before
+answering. Otherwise the generated cache is stale.
 
 Freshness options:
 
@@ -291,9 +344,19 @@ Each successful index run stores `source_model_hash`, `link_verification_hash`, 
 
 Automatically refresh generated Know data when likely inputs change.
 
-`know watch` is the canonical long-running command for keeping `.know/linkVerification.lock.toml`, the generated read model, and semantic search index fresh during local development.
+`know watch` is the canonical long-running command for keeping
+`.know/linkVerification.lock.toml`, the generated read model, and semantic
+search index fresh during local development.
 
-`know watch` watches `.know` files, resolver inputs, and linked repository targets where practical. Filesystem events are rebuild triggers only. Freshness is still determined by resolved model hash recomputation and lockfile comparison.
+`know watch` is the recommended mode for interactive work in a repository,
+whether the actor is a human or a long-running agent. Short-lived agents and CI
+jobs should usually use explicit `know index` calls instead of starting a
+watcher.
+
+`know watch` watches `.know` files, resolver inputs, and linked repository
+targets where practical. Filesystem events are rebuild triggers only. Freshness
+is still determined by resolved model hash recomputation and lockfile
+comparison.
 
 `know sync` is not a canonical command unless a separate synchronization workflow is defined later.
 
@@ -304,6 +367,15 @@ Create, edit, inspect, and maintain rules. The CLI authoring surface is centered
 The TUI provides the richer guided editor. Manual TOML editing remains a first-class path for users and agents that prefer direct file edits. `know rule` commands cover common direct actions, scripting, and CI-friendly workflows.
 
 `know rule` commands may prompt interactively for missing fields, but every authoring action must also be possible with explicit flags and `--no-input`.
+
+Read-only `know rule` commands query the generated read model. `know rule show`
+should make a rule's inline links, resolved code targets, and verification
+status available so users and agents can list the code locations a rule points
+to without manually reading TOML.
+
+`know rule list` is a structured read, not a TOML dump. It should be able to
+filter and group by fields such as tags, concepts, link counts, verification
+status, and resolved targets by querying the read model.
 
 Useful subcommands include:
 

@@ -36,7 +36,7 @@ If validation, parsing, link resolution, lockfile generation, read-model generat
 
 The validation, parsing, link-resolution, fingerprinting, and status-derivation steps are shared system logic. `know index` runs that pipeline in generation mode and writes the committed lockfile plus generated cache data. `know check` runs the same analysis in read-only mode and does not write the lockfile or cache files.
 
-Index freshness is determined by recomputing the current resolved model, comparing its hash with the `resolved_model_hash` stored in the active SQLite read model, and checking that `.know/linkVerification.lock.toml` matches the recomputed expected lockfile. The resolved model covers parser output, `.know/linkVerification.toml`, resolver inputs, resolved target sets, target fingerprints, derived link-verification statuses, schema versions, Tree-sitter resolver inputs, and semantic-search configuration. File mtimes and watcher events may optimize freshness checks, but they are not the correctness boundary.
+Index freshness means the active generated artifacts correspond to the current source files, approval file, resolver inputs, repository targets, and semantic-search settings. `know check` and `know index` prove this by recomputing the current resolved model, comparing its hash with the `resolved_model_hash` stored in the active SQLite read model, and checking that `.know/linkVerification.lock.toml` matches the recomputed expected lockfile. Normal read commands answer from the active read model and may inspect current files only to detect or enforce freshness. The resolved model covers parser output, `.know/linkVerification.toml`, resolver inputs, resolved target sets, target fingerprints, derived link-verification statuses, schema versions, Tree-sitter resolver inputs, and semantic-search configuration. File mtimes and watcher events may optimize freshness checks, but they are not the correctness boundary.
 
 ### config validator
 
@@ -100,7 +100,7 @@ Historical changes are documented in git. Not by the know system itself. The kno
 
 The generated read model stores normalized rule, concept, link, target, status, diagnostic, and search data. It is ephemeral: the source of truth is always the source files and `.know/linkVerification.toml`, while the committed lockfile is the reviewable generated reflection. The read model can be recreated at any time by re-indexing the current source files, approval file, and repository targets.
 
-The read model is only written to by the indexer, and read-only for all other purposes. It provides fast access to rules data for command-line and interactive flows, and provides the query surface for semantic search.
+The read model is Know's operational read surface. Normal read commands query it instead of using reparsed `.know` source files as their answer path. It is only written to by the indexer, and read-only for all other purposes. It provides fast access to rules data for command-line and interactive flows, and provides the query surface for semantic search.
 
 SQLite mirrors the query-relevant records from `.know/linkVerification.lock.toml`: link status, status reasons, unlinked rules, and lockfile hashes. This is needed because commands do not only display the lockfile; they join status data with rules, concepts, resolved targets, diagnostics, and search documents. The committed lockfile remains the reviewable generated artifact, while SQLite is the fast query projection.
 

@@ -83,6 +83,84 @@ Two obligations follow:
 
 Everything else is a means to those ends.
 
+## Baseline User Path
+
+Know works when this loop works end to end:
+
+1. A user initializes `.know/`.
+2. A user writes one rule with rationale.
+3. A user links that rule to one path or glob.
+4. `know index` builds the lockfile and read model.
+5. `know context <target>` returns the matching rule, rationale, link target,
+   verification status, and freshness signal.
+6. `know verify` approves the current rule-link-code relationship.
+7. After the linked code changes, `know check` and `know context <target>` show
+   that relationship as unverified until it is reviewed again.
+
+The first working app should prove this path with plain TOML files, path and
+glob links, and the CLI commands needed for the loop: `init`, `index`,
+`context`, `check`, and `verify`.
+
+In an interactive terminal, each step should guide the user toward the next
+useful command. In non-interactive and agent workflows, commands should expose
+recommended next commands without prompting.
+
+## State and Refresh Model
+
+Know follows a Git-like split between current files, approved state, and
+generated views:
+
+1. Current reality is the code plus human-authored `.know` rule and concept
+   files.
+2. Approved relationship state lives in `.know/linkVerification.toml` and is
+   changed only by explicit verification.
+3. Generated views are `.know/linkVerification.lock.toml` and `.know/cache/`.
+   They can be rebuilt from current reality and approved state.
+
+Read commands automatically detect stale generated views, like `git status`
+detects changed files. Read commands must not update `.know/` files or generated
+artifacts as a side effect. Refreshing generated views is explicit through
+`know index`, or continuous through `know watch`.
+
+Verification is always manual. Know may automatically recalculate whether a
+relationship is fresh, stale, broken, or unverified, but it must not
+automatically approve that the relationship is still valid.
+
+For interactive work in a repository, `know watch` is the recommended way to
+keep generated state fresh while editing. Short-lived scripts and agents should
+prefer explicit `know index` calls at the points where they need fresh output.
+
+### Decision: SQLite Is Required for Normal Reads
+
+Know's source of truth is the human-authored `.know` TOML files plus
+`.know/linkVerification.toml`. Normal read interactions do not reparse those
+files to produce command output. They query the generated SQLite read model.
+
+This makes SQLite the operational read projection for commands such as
+`know context`, `know rule list`, `know status`, `know report`, `know browse`,
+`know search`, and `know query`. If the read model is missing or incompatible,
+those commands should fail with actionable guidance to run `know index`. If it
+is stale, they should report that freshness problem and follow the command's
+freshness policy.
+
+The reason is not TOML parse speed alone. The read model stores the normalized
+and resolved facts that read surfaces need: rules, concepts, inline links,
+resolved code targets, verification status, diagnostics, search documents, and
+stable SQL views. Recomputing that projection on every read would duplicate the
+indexing pipeline and make the CLI, TUI, agent, report, and query surfaces less
+coherent.
+
+A concrete example is `know rule list`. It is not just a TOML dump. It may need
+to filter by tag, count matching rules, show link counts, include verification
+status, group by target, or answer "which code locations does this rule point
+to?" Those are structured joins over normalized rule, link, target, and status
+records. SQLite is the right surface for that read path.
+
+SQLite remains disposable. It is never the approval source, and deleting it
+does not lose project knowledge. `know check` is the source-recompute path: it
+validates current `.know` source files, `.know/linkVerification.toml`, and
+repository code without trusting the generated cache.
+
 ## Forcing Constraints
 
 | Constraint                             | Implication                                                       |
@@ -97,11 +175,13 @@ Everything else is a means to those ends.
 
 ## Principles
 
-1. **Rules are the center.** A rule owns its links, status, rationale, and
-   review date.
+1. **Rules are the center.** A rule owns its links and rationale. Verification
+   status belongs to each rule-link-code relationship.
 2. **Files are the source of truth.** TOML in Git.
 3. **Git is used for versioning, not the system itself.** The system only tracks the current state of rules and links, and relies on git for historical changes and versioning.
-4. **SQLite is a disposable read model.** Only the indexer writes to it.
+4. **SQLite is the operational read model, not the source of truth.** Normal
+   read commands query it; it is generated, disposable, and only the indexer
+   writes to it.
 5. **Knowledge is commentary; code is canonical for behavior.** Knowledge is canonical for intent.
 6. **Pre-change awareness beats post-change validation.**
 7. **Stable slugs beat opaque IDs.** Rules and concepts have required human-readable IDs that can be suggested by the CLI or TUI.
@@ -193,7 +273,9 @@ already been changed.
 ### Why `know context` Starts From Rules
 
 This is the main UX rule: a path should return rules touching that path, and
-only then supporting context reached through those rules. Directly linked concepts are not enough to trigger output. This keeps `know context` focused on
+only then supporting context reached through those rules. The output includes
+each matching relationship's verification status and freshness. Directly linked
+concepts are not enough to trigger output. This keeps `know context` focused on
 the constraints that can be broken by the pending change.
 
 ### Why Unlinked Rules Are Visible in Reports But Not in Context

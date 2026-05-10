@@ -73,6 +73,11 @@ The lockfile intentionally does not duplicate the per-link approval fingerprints
 
 ## Read model projection
 
+SQLite is Know's operational read projection. The source of truth remains the
+human-authored `.know` TOML files plus `.know/linkVerification.toml`, but normal
+read commands query the active read model instead of using reparsed source
+files as their answer path.
+
 SQLite mirrors the lockfile's query-relevant data because most commands need to join link-verification state with other generated data.
 
 At minimum, the read model stores:
@@ -82,7 +87,12 @@ At minimum, the read model stores:
 - one row per `.know/linkVerification.lock.toml` `[[unlinked_rules]]` entry
 - normalized rule, concept, inline link, resolved target, diagnostic, and search-document data needed to join those status records to user-facing output
 
-This duplication is intentional. `.know/linkVerification.lock.toml` is optimized for Git review; SQLite is optimized for queries. `know context` needs fast target-to-rule joins with status data, `know status` and `know report` need counts and grouping by status/reason, `know query` needs stable SQL views, `know browse` needs interactive filtering, and semantic search may use status as a facet.
+This duplication is intentional. `.know/linkVerification.lock.toml` is optimized for Git review; SQLite is optimized for queries. `know context` needs fast target-to-rule joins with status data, `know rule list` and `know rule show` need normalized rule and link records, `know status` and `know report` need counts and grouping by status/reason, `know query` needs stable SQL views, `know browse` needs interactive filtering, and semantic search may use status as a facet.
+
+For example, "list all code locations this rule points to" is a join across the
+rule, its inline links, resolved targets, and current verification status. The
+source TOML is still authoritative, but SQLite is the structured read surface
+for that already-indexed relationship data.
 
 The stable SQL views should expose lockfile-derived data through `link_verification_status` and `unlinked_rules`. Internal tables may store current and approved fingerprints when useful for diagnostics or future incremental indexing, but stable views should not require callers to depend on raw fingerprint values.
 
@@ -108,19 +118,41 @@ If semantic search uses files outside SQLite, those files must record the same `
 
 ## Freshness
 
-Freshness is determined by recomputing the current resolved model, comparing its hash with `resolved_model_hash` stored in the active SQLite read model, and comparing the expected link-verification lockfile with `.know/linkVerification.lock.toml`.
+Freshness is the claim that the active generated artifacts were produced from
+the current source files, approval file, resolver inputs, repository targets,
+and semantic-search settings.
 
-The committed lockfile is fresh when the recomputed expected lockfile exactly matches `.know/linkVerification.lock.toml`.
+`know check` and `know index` prove freshness by recomputing the current
+resolved model, comparing its hash with `resolved_model_hash` stored in the
+active SQLite read model, and comparing the expected link-verification lockfile
+with `.know/linkVerification.lock.toml`.
 
-The generated cache is fresh when the recomputed resolved model hash matches the stored `resolved_model_hash`, the normalized lockfile hash stored in SQLite matches `.know/linkVerification.lock.toml`, and any semantic-search sidecar has the same resolved model hash as SQLite.
+Freshness detection is automatic for commands that depend on generated state.
+Like `git status` or `git diff`, these commands may inspect current files to
+discover that generated state is stale. They still answer from the active read
+model, and must not write refreshed artifacts as a side effect.
 
-The committed lockfile is stale when `.know/linkVerification.lock.toml` exists but differs from the recomputed expected lockfile.
+The committed lockfile is fresh when the recomputed expected lockfile exactly
+matches `.know/linkVerification.lock.toml`.
 
-The generated cache is stale when the active cache exists but the recomputed resolved model hash differs from the stored `resolved_model_hash`, or when SQLite was built against a different normalized lockfile hash.
+The generated cache is fresh when the recomputed resolved model hash matches
+the stored `resolved_model_hash`, the normalized lockfile hash stored in SQLite
+matches `.know/linkVerification.lock.toml`, and any semantic-search sidecar has
+the same resolved model hash as SQLite.
 
-The generated cache is missing when `.know/cache/know.sqlite` does not exist or cannot be opened as a Know read model.
+The committed lockfile is stale when `.know/linkVerification.lock.toml` exists
+but differs from the recomputed expected lockfile.
 
-The generated cache is incompatible when the database exists but has an unsupported application ID, schema version, stable-view contract version, or required feature set. Incompatible caches should be rebuilt with `know index`.
+The generated cache is stale when the active cache exists but the recomputed
+resolved model hash differs from the stored `resolved_model_hash`, or when
+SQLite was built against a different normalized lockfile hash.
+
+The generated cache is missing when `.know/cache/know.sqlite` does not exist or
+cannot be opened as a Know read model.
+
+The generated cache is incompatible when the database exists but has an
+unsupported application ID, schema version, stable-view contract version, or
+required feature set. Incompatible caches should be rebuilt with `know index`.
 
 The resolved model hash includes at least:
 
@@ -139,10 +171,22 @@ File mtimes, filesystem events, and cached stat data may be used as performance 
 
 ## Command behavior
 
-`know index` writes `.know/linkVerification.lock.toml`, a new SQLite read model, and semantic search index from the current resolved model.
+`know index` writes `.know/linkVerification.lock.toml`, a new SQLite read
+model, and semantic search index from the current resolved model.
 
-`know context`, `know search`, `know browse`, `know query`, `know status`, and `know report` read from the active read model. Commands that require fresh data compare the current resolved model hash with the stored `resolved_model_hash` before answering.
+`know context`, `know search`, `know browse`, `know query`, `know status`,
+`know report`, and read-only `know rule` commands are read commands. They read
+from the active read model and may inspect enough current state to detect stale
+generated views, but they do not write `.know/linkVerification.lock.toml`
+or cache files. Commands that require fresh data must prove the active read
+model corresponds to the current inputs before answering.
 
-`know check` recomputes the resolved model and expected lockfile in read-only mode. It reports stale lockfiles by comparing the expected lockfile with `.know/linkVerification.lock.toml`. It may also report cache freshness by comparing hashes, but its source health result does not depend on the generated cache.
+`know check` recomputes the resolved model and expected lockfile in read-only
+mode. It reports stale lockfiles by comparing the expected lockfile with
+`.know/linkVerification.lock.toml`. It may also report cache freshness by
+comparing hashes, but its source health result does not depend on the generated
+cache.
 
-`know watch` watches for likely changes and triggers rebuilds of the lockfile and cache. It must not rely on watcher events as proof of freshness.
+`know watch` watches for likely changes and triggers rebuilds of the lockfile
+and cache. It is the recommended refresh path for interactive editing sessions.
+It must not rely on watcher events as proof of freshness.
