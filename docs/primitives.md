@@ -27,6 +27,8 @@ Rules may be valid before they have any inline links. A rule with no links is `u
 
 Links make rules useful. A link is the relationship between one rule and one code target, such as a path, glob, or symbol. Verification state is owned by that rule-link-code relationship, even when several rules point at the same target.
 
+The target is the important abstraction: code whose change should surface or reverify the rule. Symbols are preferred when they fit because they are semantically precise, but they are not the whole model. Paths and globs remain first-class for file-level and area-level rules that do not honestly map to a named structural declaration.
+
 Links do not have their own required source-defined IDs. They are part of their owning rule, and duplicate links with the same kind and target under one rule are invalid.
 
 ### Concepts

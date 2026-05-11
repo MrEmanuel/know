@@ -185,7 +185,8 @@ repository code without trusting the generated cache.
 5. **Knowledge is commentary; code is canonical for behavior.** Knowledge is canonical for intent.
 6. **Pre-change awareness beats post-change validation.**
 7. **Stable slugs beat opaque IDs.** Rules and concepts have required human-readable IDs that can be suggested by the CLI or TUI.
-8. **Boring beats clever.** Links are paths, globs, and symbol names.
+8. **Boring beats clever.** Links target code. Prefer symbols for semantic
+   precision; use paths and globs for file-level and area-level rules.
 
 ## First-Class Citizens
 
@@ -221,6 +222,33 @@ rules makes the source file match that ownership model, while the parser and
 SQLite read model can still treat links as first-class records internally.
 Links do not have source-defined IDs; their identity is scoped to the owning
 rule.
+
+### Why Links Are Not Just Symbols
+
+The ground-truth target is code whose change should surface or reverify a
+rule. A symbol is the best target when a rule applies to a named structural
+declaration, but many real rules apply to files, generated artifacts, config,
+migrations, routes, schemas, templates, tests, assets, or whole module areas.
+
+Forcing every link through a symbol would either lose coverage or create fake
+symbols. Know should prefer symbols for semantic precision, and keep paths and
+globs for honest file-level and area-level rules.
+
+### Why Link Creation Starts From Code
+
+The user should not have to choose `path`, `glob`, or `symbol` before they know
+what code they mean. Link creation should ask what code the rule applies to,
+accept fuzzy input such as a function name, class name, file name, or directory
+prefix, and then show ranked candidates.
+
+Tree-sitter powers symbol discovery, outlines, previews, and ranking when a
+supported grammar is available. Symbol candidates should be shown first because
+they are the most precise and most likely to survive refactors. File and glob
+targets remain available, but the interface should steer users toward them only
+when no honest symbol target exists or the rule really applies to a file or
+area.
+
+After selection, Know stores the canonical target as a symbol, path, or glob.
 
 ### Why Optional Concepts
 
@@ -330,3 +358,15 @@ The baseline system focuses on developer and agent workflows; multi-party verifi
 | Cursor/Copilot rules, AGENTS.md | Agents read short scoped instruction files  |
 | Obsidian / Logseq               | Wiki links are lightweight graph syntax     |
 | Pact / property-based tests     | Rules can be connected to executable checks |
+
+# 7 design questions
+
+## Question Short description
+
+1 Resolved snapshots or live selectors? Should a link only store a selector like src/auth/\*_/_.ts, or also store the exact files/symbols it resolved to at review time?
+2 Code-centric or annotation-centric? Is the primary model annotation → code, or code → annotations? Internally, a bidirectional graph is probably best.
+3 AST identity or textual identity? Should links track code by paths/text/line numbers, or by more stable semantic identifiers such as symbols, AST nodes, and fingerprints?
+4 Current HEAD or historical commits? Should the system answer only “what applies now,” or also “what applied at commit X”? This affects indexing and provenance.
+5 Branch and merge semantics? How should the system handle one branch changing code while another changes annotations? This determines conflict and revalidation behavior.
+6 Query model complexity? Are simple lookups enough, or do you need aggregations, filters, graph traversal, and reporting? This determines the shape of the index.
+7 How is trust maintained? How does the system prove that an annotation still meaningfully applies after code changes? This is the human review and verification problem. 8. Should Know support links, globs AND symbols, or just symbols?

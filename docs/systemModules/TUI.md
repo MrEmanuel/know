@@ -28,6 +28,28 @@ Tree-sitter-backed browsing can provide:
 
 Path and glob links still use deterministic filesystem resolution and raw file-content fingerprints for verification. Tree-sitter improves browsing, authoring, previewing, search chunking, and repair suggestions, but it does not change the source-of-truth identity of path and glob links.
 
+## Link authoring
+
+The TUI should create links through a code target picker, not by first asking
+the user to choose a link kind. When adding a link to a rule, the primary prompt
+is "What code does this rule apply to?"
+
+The picker accepts fuzzy input such as a function name, class name, method name,
+file name, or directory prefix. It should return mixed candidates:
+
+- Tree-sitter symbols when a supported grammar is available
+- repository files
+- directory or prefix matches that can become globs
+
+Symbol candidates should be ranked and visually preferred. The UI should nudge
+users toward symbols because they are the most precise target and the best fit
+for rules that apply to named code. File and glob targets are last-resort
+choices for rules that genuinely apply to a whole file, generated artifact,
+config, migration, schema, route, template, test fixture, asset, or module area.
+
+After the user selects a candidate, the TUI writes the canonical inline link as
+`kind = "symbol"`, `kind = "path"`, or `kind = "glob"`.
+
 ### Rules tab
 
 Three columns:

@@ -388,6 +388,18 @@ Useful subcommands include:
 - concept add
 - concept remove
 
+`know rule link add` should be target-first. In interactive mode, the command
+should ask what code the rule applies to, accept fuzzy input such as a function
+name, class name, file name, or directory prefix, and present ranked candidates.
+Tree-sitter-backed symbol candidates should be shown first when available.
+Paths and globs remain available, but the prompt should steer users toward them
+only when the rule genuinely applies to a file or area rather than a named
+symbol.
+
+In non-interactive mode, explicit target and kind flags remain available for
+scripts and agents. When the target can be resolved unambiguously, Know may
+infer the kind and store the canonical inline link.
+
 `know rule list` should support target-aware filtering for agent workflows that need to inspect or count relevant rules without loading full context output.
 
 Useful forms include:
