@@ -55,3 +55,28 @@ This should be designed carefully around privacy, transparency, and user control
 
 - LSP integration as a complement to Tree-sitter.
 - JSON5 as an additional source file format.
+
+## Jira and Confluence integration
+
+Know could integrate with Jira and Confluence APIs to surface rule status and rule health in project management and documentation tools. This would make Know output accessible to non-technical stakeholders such as scrum masters, product owners, managers, business owners, and external stakeholders.
+
+Useful integrations could include:
+
+- sync rule health reports to Confluence pages and keep them up to date
+- link Know rules to Jira tickets so planned work shows affected rules
+- surface unverified or broken rule-code relationships as Jira warnings or tasks
+- provide dashboard views for coverage and rule health oversight
+- generate periodic summaries for stakeholder reviews
+
+## Dependabot-style GitHub bot
+
+A GitHub application could monitor rule-code health and act on changes, similar to how Dependabot tracks dependency freshness.
+
+Possible behaviors:
+
+- comment on pull requests with rules affected by changed files
+- open issues or PRs when rules stay unverified beyond a configured threshold
+- provide repository-level dashboards for rule health
+- act as an automated reviewer focused on rule-code relationship integrity
+
+The bot integration contract would rely on `know check --format json` and `know context --format json`.

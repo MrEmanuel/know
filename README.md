@@ -5,47 +5,52 @@
 Know solves the tribal knowledge problem.
 "Tribal knowledge is knowledge that is not documented, and only exists in the minds of a few individuals. This creates a risk of knowledge loss if those individuals leave the organization, and makes it difficult for new team members to learn and understand the system."
 
-## Know in a nutshell
+## How Know works
 
-Define rules.
-Link it to code.
-Get notified of the relevant rules when editing code.
+Define rules. Link them to code. Query the rules that apply to any file, symbol, or path.
+
+Know stores rules as plain TOML files in a `.know/` directory, committed alongside your code. Each rule has a description, a rationale explaining why it exists, and inline links that connect it to specific code targets: files, globs, or symbols. When linked code changes, Know marks those rule-code relationships as unverified until someone re-confirms them.
+
+The core command is `know context <target>`. It returns the rules that apply to a given file, symbol, or glob, along with each relationship's verification status. This is the information you need before making a change.
+
+Know is pull-based, like `git status`. You query it when you need context. Pre-change awareness, where rules surface automatically before code is edited, is achieved through integration surfaces: an IDE plugin that shows relevant rules while you work, agent hooks that inject rules into AI context before edits, or git hooks that check rule health before commits. These integrations turn `know context` from a command you run into rules that appear when they matter. See `docs/integrationSurfaces.md` for the full integration contract.
 
 ## For AI agents
 
-An AI-agent is only as good as the context it's given. Know provides AI-agents with precisely the context they need when editing code. No need to bloat your AI's context with business rules. The Know system provides the AI-agent with the relevant rules to make informed decisions then and there, when editing the code.
+An AI agent is only as good as the context it is given. Know provides agents with the specific rules that apply to the code they are about to change. Through agent hooks and AGENTS.md instructions, agents call `know context` before editing a file and receive exactly the constraints they need: no more, no less.
 
 ## For developers
 
-The know system provides developers with the context they need when editing code. No need to keep business rules in your head, or search for them in documentation. The know system will inform you of the relevant rules when editing the code, ensuring that you always have the context you need to make informed decisions.
+Know gives developers the context they need when working with code. Through the IDE plugin, relevant rules surface for the active file and files being edited, similar to how the Git source control tab surfaces code changes without requiring a manual `git status` call. Through CLI and TUI flows, developers can browse, search, and maintain rules directly.
 
 ## For managers
 
-The Know system provides a way to easily oversee and browse what rules exist, and if they are up to date and followed. It provides a surface for managers and developers to work together, ensuring that rules and constraints of the system are relevant, up to date, and followed. Because the Know system connects rules to code, managers can be confident that the rules are being followed.
+Know provides a way to oversee what rules exist and whether they are up to date and followed. It provides shared surfaces for managers and developers to maintain system constraints together, and to see where verification or coverage needs attention.
 
 ## For business owners
 
-If the reliability and consistency of your IT-system is core to your business, you want a tool that provide anyone working on the system with the context they need to make informed decisions. The Know system ensure that what made the system successful in the first place, remains intact as the system evolves.
+If reliability and consistency are core to your business, you need a system that gives anyone working on the codebase the right context for informed decisions. Know preserves the intent that made the system successful as the code evolves.
 
-Don't rely on a single person's expert knowledge of the system. Systemize the knowledge, and make it available to anyone working on the system. This is what Know does.
+Do not rely on one person's expert knowledge. Systemize the knowledge and make it available to everyone working on the system. This is what Know does.
 
 > **Goal:** prevent 80-99% of "I didn't know that rule existed" mistakes by
 > surfacing relevant rules before a change is made.
 
+## The problem
+
 A common information structure for teams today is:
 Confluence -> Jira -> Application logic
 
-Business rules, if documented at all, are stuck in confluence pages. No connection to code. No signal when they are violated.
+Business rules, if documented at all, are stuck in Confluence pages. There is no connection to code and no signal when those rules are violated.
 
-Most teams rely on implicit knowledge, often domain specific and carried by key individuals. This creates lock-in where the project's long-term success, and ulitimatly the business's success, depends on those individuals not leaving.
+Most teams rely on implicit knowledge, often domain-specific and carried by key individuals. This creates lock-in where the project's long-term success, and ultimately the business's success, depends on those individuals not leaving.
 
-It's also a huge blind spot for AI agents, which have no way to access that knowledge when making changes to the codebase. They rely in humans to explicitly communicate the rules, every time, or document them in comments or markdown files that might never be read.
+This is also a blind spot for AI agents, which cannot access that knowledge unless humans restate it every time or maintain separate documentation that may not be read.
 
-Know solves many of these problems.
-Know provide users, AI-agents and managers a system that is easy to browse, edit and maintain, and that surfaces relevant rules at the right time, when code is being edited. It gives developers and AI-agents the context they need to make informed decisions, and it gives managers confidence that the rules are being followed, even as the code evolves.
+Know addresses this by connecting explicit rules to code, and by making those rules queryable at edit time through CLI, TUI, and integration surfaces.
 
-For more indepth information on the system design, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the docs directory.
-Ideas for possible future development are collected in `docs/futureIdeas.md`.
+For more in-depth information on system design, tech stack, file structure, syntax, primitives, and integrations, refer to the docs directory.
+Ideas for future development are collected in `docs/futureIdeas.md`.
 
 # Part 2 - Design
 
@@ -183,7 +188,9 @@ repository code without trusting the generated cache.
    read commands query it; it is generated, disposable, and only the indexer
    writes to it.
 5. **Knowledge is commentary; code is canonical for behavior.** Knowledge is canonical for intent.
-6. **Pre-change awareness beats post-change validation.**
+6. **Pre-change awareness beats post-change validation.** Know is pull-based;
+   integration surfaces such as IDE plugins, agent hooks, and `know context`
+   make rule context available before code is changed.
 7. **Stable slugs beat opaque IDs.** Rules and concepts have required human-readable IDs that can be suggested by the CLI or TUI.
 8. **Boring beats clever.** Links target code. Prefer symbols for semantic
    precision; use paths and globs for file-level and area-level rules.
@@ -294,9 +301,17 @@ Conflating those signals would make both less useful.
 
 ### Why Pre-Change Awareness, Not CI Bots First
 
-The highest leverage moment is before the edit. For AI agents, the right rule
+The highest-leverage moment is before the edit. For AI agents, the right rule
 in prompt context is more valuable than a post-hoc warning after code has
 already been changed.
+
+Know itself is pull-based: `know context` returns rules on demand, like
+`git status` returns changes on demand. Pre-change awareness is achieved
+through integration surfaces that call `know context` at the right moment:
+IDE plugins that show rules for active files, agent hooks that inject rules
+before edits, and git hooks that check rule health before commits. Git uses
+the same split: the core tool tracks state, while integrations decide when and
+how that state is surfaced.
 
 ### Why `know context` Starts From Rules
 
@@ -323,7 +338,7 @@ Know connects _specific rules to specific code_. It is not a general system rule
 
 **Know is not for:** "Our company believes in customer-first design" or "We follow SOLID principles" or general architectural philosophies.
 
-If a rule applies to the entire system (not tied to specific code), it belongs in the repository root—README.md, ARCHITECTURE.md, AGENTS.md, or similar. Know is purposefully scoped to _link-bearing rules_, making it a targeted tool for preventing "I didn't know that rule existed" mistakes in the code being edited. This scope boundary prevents Know from becoming a dumping ground and forces teams to distinguish between general principles (which belong in repo docs) and code-specific constraints (which belong in Know).
+Not all rules belong in Know. If a rule applies to the entire system and is not tied to specific code, it belongs outside Know in project-level documentation such as README.md, ARCHITECTURE.md, AGENTS.md, code comments, or similar material. Know is purposefully scoped to _link-bearing rules_, making it a targeted tool for preventing "I didn't know that rule existed" mistakes in code that is being edited. This scope boundary prevents Know from becoming a dumping ground and forces teams to distinguish between general principles (project docs) and code-specific constraints (Know rules).
 
 ### Verification: Flexible, Non-Burdensome, Multi-Party
 

@@ -18,6 +18,12 @@ The command-line interface is the main entry point for direct user and agent int
 
 The interactive terminal interface allows users to browse and edit rules, concepts, and inline rule links.
 
+### ide plugin
+
+The IDE plugin surfaces rules to developers in the editor while they work. It calls CLI commands to retrieve rule context, verification status, and system health, then presents results through editor panels and notifications. VS Code is the primary target.
+
+The IDE plugin contract is documented in `docs/systemModules/idePlugin.md`.
+
 ### config parser
 
 Transforms schema-valid source files into the generated read model. This includes extracting rules, concepts, and inline rule links, then normalizing them into queryable records.

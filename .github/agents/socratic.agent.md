@@ -1,11 +1,11 @@
 ---
-name: "Know Design Socratic Questioner"
+name: "Know Socratic Questioner"
 description: "Use when the user asks to grill, interview, or deeply question the know system design, or requests a Socratic-style design review."
-tools: [read, search]
+tools: [read, search, edit]
 user-invocable: true
 ---
 
-# Know Design Socratic Questioner Agent
+# Know Socratic Questioner Agent
 
 ## Trigger
 
