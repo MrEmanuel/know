@@ -49,7 +49,7 @@ This is also a blind spot for AI agents, which cannot access that knowledge unle
 
 Know addresses this by connecting explicit rules to code, and by making those rules queryable at edit time through CLI, TUI, and integration surfaces.
 
-For more in-depth information on system design, tech stack, file structure, syntax, primitives, and integrations, refer to the docs directory.
+For more in-depth information on system design, tech stack, Know project files and directory structure, syntax, primitives, and integrations, refer to the docs directory.
 Ideas for future development are collected in `docs/futureIdeas.md`.
 
 # Part 2 - Design
@@ -115,8 +115,8 @@ recommended next commands without prompting.
 Know follows a Git-like split between current files, approved state, and
 generated views:
 
-1. Current reality is the code plus human-authored `.know` rule and concept
-   files.
+1. Current reality is the code plus knowledge files: the TOML files under
+   `.know/rules/` and `.know/concepts/`.
 2. Approved relationship state lives in `.know/linkVerification.toml` and is
    changed only by explicit verification.
 3. Generated views are `.know/linkVerification.lock.toml` and `.know/cache/`.
@@ -137,7 +137,7 @@ prefer explicit `know index` calls at the points where they need fresh output.
 
 ### Decision: SQLite Is Required for Normal Reads
 
-Know's source of truth is the human-authored `.know` TOML files plus
+Know's source of truth is the knowledge files (TOML files under `.know/`) plus
 `.know/linkVerification.toml`. Normal read interactions do not reparse those
 files to produce command output. They query the generated SQLite read model.
 
@@ -269,6 +269,12 @@ Authoring overhead kills adoption. A human reading about labels should open
 `rules/labels.toml` and see all label rules together as `[[rules]]` entries.
 The indexer reconstitutes those entries and their inline links into rule and
 link rows.
+
+### Why "Knowledge Files"
+
+The TOML files under `.know/rules/` and `.know/concepts/` are called **knowledge files**. The name maps directly to the problem: tribal knowledge that lives only in people's heads. These files make it explicit and connect it to code.
+
+When the format matters — parsing, syntax, schema — "TOML files" or "TOML knowledge files" are equally correct. "Billing knowledge file", "billing TOML file", "billing rules TOML file" all refer to the same thing.
 
 ### Why Tree-Sitter, Not LSP
 

@@ -2,7 +2,7 @@
 
 This document describes Know's system modules and how they interact. It is intentionally implementation-agnostic; concrete library and runtime choices belong in `docs/techStack.md`.
 
-For specific details on the CLI commands, tech stack, file structure, syntax, and primitives, please refer to the respective documents in the docs directory.
+For specific details on the CLI commands, tech stack, Know project files and directory structure, syntax, and primitives, please refer to the respective documents in the docs directory.
 
 ## System modules
 
