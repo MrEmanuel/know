@@ -1,8 +1,10 @@
 # Know system modules
 
-This document describes Know's system modules and how they interact. It is intentionally implementation-agnostic; concrete library and runtime choices belong in `docs/techStack.md`.
+This document describes Know's system modules and how they interact. It is intentionally implementation-agnostic; concrete library and runtime choices belong in `system-architecture/techStack.md`.
 
-For specific details on the CLI commands, tech stack, knowledge files and directory structure, syntax, and primitives, please refer to the respective documents in the docs directory.
+For specific details on the CLI commands, tech stack, knowledge files and
+directory structure, syntax, and primitives, refer to the respective documents
+in `system-architecture/`.
 
 ## System modules
 
@@ -22,19 +24,19 @@ The interactive terminal interface allows users to browse and edit rules, concep
 
 The IDE plugin surfaces rules to developers in the editor while they work. It calls CLI commands to retrieve rule context, verification status, and system health, then presents results through editor panels and notifications. VS Code is the primary target.
 
-The IDE plugin contract is documented in `docs/systemModules/idePlugin.md`.
+The IDE plugin contract is documented in `system-architecture/systemModules/idePlugin.md`.
 
 ### config parser
 
 Transforms schema-valid knowledge files into the generated read model. This includes extracting rules, concepts, and inline rule links, then normalizing them into queryable records.
 
-The parser also prepares data needed by the semantic search index. Concrete storage and semantic-search implementation choices belong in `docs/techStack.md`.
+The parser also prepares data needed by the semantic search index. Concrete storage and semantic-search implementation choices belong in `system-architecture/techStack.md`.
 
 ### indexer
 
 Builds the committed link-verification lockfile, generated local read model, and semantic search index from source TOML files, `.know/linkVerification.toml`, and current repository targets.
 
-The detailed indexer contract is documented in `docs/systemModules/indexer.md`.
+The detailed indexer contract is documented in `system-architecture/systemModules/indexer.md`.
 
 The baseline indexer performs an atomic full rebuild. It runs the shared validation, parsing, analysis, lockfile generation, and projection pipeline from scratch, writes generated data to temporary locations, and only replaces `.know/linkVerification.lock.toml`, `.know/cache/know.sqlite`, and `.know/cache/semantic/` after the full rebuild succeeds.
 

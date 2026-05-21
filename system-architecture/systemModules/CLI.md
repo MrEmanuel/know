@@ -114,8 +114,10 @@ Know has the following commands:
 
 ### know context
 
-The Know systems main feature.
-Return relevant rule, concept and rationale data for a given symbol, glob, or path. Takes the input, queries the generated read model for resolved links, and returns relevant rules.
+Know's main feature.
+Return the rules and rationale that apply before editing a given symbol, glob,
+or path. The command takes the input, queries the generated read model for
+resolved links, and returns the relevant rules.
 
 `know context` accepts one target and returns the rules that apply to that
 target, including each matching relationship's verification status and
@@ -220,7 +222,7 @@ The default output is human-readable. For automation, `know status` should suppo
 
 Produce a detailed report of the current Know system state.
 
-`know report` is the fuller and more configurable version of `know status`. It summarizes rules, concepts, links, verification state, unlinked rules, broken targets, unverified relationships, stale lockfiles, tags, and coverage by file or target. It can be used for audits, CI artifacts, pull request comments, and project documentation.
+`know report` is the fuller and more configurable version of `know status`. It summarizes rules, concepts, links, verification state, unlinked rules, broken targets, unverified relationships, stale lockfiles, tags, and coverage by file or target. It can be used for audits, CI artifacts, pull request comments, and stakeholder-facing rule health summaries.
 
 Useful options include:
 

@@ -2,7 +2,9 @@
 
 Know is pull-based. `know context <target>` returns the rules that apply to a given file, symbol, or glob. Integration surfaces determine when and how that query happens, turning on-demand context into pre-change awareness.
 
-This document describes the contracts between Know and the systems that surface rules to users and agents.
+This document describes the contracts between Know and the systems that surface
+rules to users and agents. The product value sits at the moment before edit:
+the right rule should appear while it can still prevent a bad change.
 
 ## How Know surfaces rules
 
@@ -30,7 +32,7 @@ The plugin should:
 - Refresh rule state on file save and file open.
 - Link to TUI or CLI flows for editing and verification.
 
-The IDE plugin is a maintained part of Know. VS Code is the primary target. The module contract is documented in `docs/systemModules/idePlugin.md`.
+The IDE plugin is a maintained part of Know. VS Code is the primary target. The module contract is documented in `system-architecture/systemModules/idePlugin.md`.
 
 ### Agent instructions (AGENTS.md)
 

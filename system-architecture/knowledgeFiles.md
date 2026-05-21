@@ -1,14 +1,16 @@
 # Knowledge files and `.know` directory structure
 
-Know stores its project data in a `.know/` directory at the repository root.
+Know stores project rule data in a `.know/` directory at the repository root.
+These files are the durable input that lets Know surface hidden constraints
+before code changes.
 
 ## Terminology
 
 Use these terms consistently across documentation:
 
-- **Knowledge files**: the human-authored TOML files under `.know/rules/` and `.know/concepts/`. This is the everyday term. "Open the billing knowledge file." "Write your rules in knowledge files."
+- **Knowledge files**: the human-authored TOML files under `.know/rules/` and `.know/concepts/`. This is the everyday technical term. "Open the billing knowledge file." "Write your rules in knowledge files." It names the file type; it is not the product value proposition.
 - **TOML files**: the technical precision term for the same files, used when the format itself is relevant. "Knowledge files are plain TOML committed to Git." Individual files can be named by content and type: "billing rules TOML file", "customer-identity concepts TOML file".
-- **Generated files**: `.know/linkVerification.lock.toml` and `.know/cache/` content — produced by Know, not authored by hand.
+- **Generated files**: `.know/linkVerification.lock.toml` and `.know/cache/` content - produced by Know, not authored by hand.
 
 ## Structure
 
@@ -32,7 +34,9 @@ The `.know/` directory has source definitions, verification files, and disposabl
     └── semantic/
 ```
 
-Links are defined inline inside rule definitions. A link is the relationship between one rule and one code target.
+Links are defined inline inside rule definitions. A link is the relationship
+between one rule and one code target. That relationship is what lets Know show
+the rule before the linked code is changed.
 
 ## File behavior
 

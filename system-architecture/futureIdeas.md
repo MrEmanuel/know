@@ -2,6 +2,10 @@
 
 This document collects ideas that may be useful for future development, but are not part of the normative system definition in the other docs.
 
+The baseline product job remains pre-change awareness: surface the relevant
+rule before a human or AI agent edits code. Future surfaces should strengthen
+that job or help teams maintain the rule-code relationships that make it work.
+
 ## Rule-guided code changes
 
 A user could edit system rules, causing related links to become unverified. An AI agent could then discover the unverified rule-code pairs and update the code to satisfy the changed rules.
@@ -58,7 +62,12 @@ This should be designed carefully around privacy, transparency, and user control
 
 ## Jira and Confluence integration
 
-Know could integrate with Jira and Confluence APIs to surface rule status and rule health in project management and documentation tools. This would make Know output accessible to non-technical stakeholders such as scrum masters, product owners, managers, business owners, and external stakeholders.
+Know could integrate with Jira and Confluence APIs to surface rule status and
+rule health in the places non-technical stakeholders already review work. These
+integrations should not turn Know into a documentation repository; they should
+make code-linked intent, stale relationships, broken links, and coverage visible
+to scrum masters, product owners, managers, business owners, and external
+stakeholders.
 
 Useful integrations could include:
 

@@ -1,6 +1,6 @@
 # Know tech stack
 
-This document records the implementation choices for Know. System behavior, module boundaries, and workflows are described in `docs/systemModules/`.
+This document records the implementation choices for Know. System behavior, module boundaries, and workflows are described in `system-architecture/systemModules/`.
 
 ## Language and runtime
 
@@ -12,13 +12,13 @@ Rust is a good fit because Know is a local CLI tool that needs fast startup, pre
 
 The command-line interface uses `clap`.
 
-`clap` owns command definitions, argument parsing, flags, help output, and shell completion support. Command behavior is described in `docs/systemModules/CLI.md`.
+`clap` owns command definitions, argument parsing, flags, help output, and shell completion support. Command behavior is described in `system-architecture/systemModules/CLI.md`.
 
 ## Terminal interface
 
 The interactive terminal interface uses `Ratatui`.
 
-`Ratatui` owns terminal layout, keyboard interaction, panes, lists, and modals. TUI behavior is described in `docs/systemModules/TUI.md`.
+`Ratatui` owns terminal layout, keyboard interaction, panes, lists, and modals. TUI behavior is described in `system-architecture/systemModules/TUI.md`.
 
 ## Config parsing
 

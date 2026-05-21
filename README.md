@@ -1,37 +1,64 @@
-# Know - Connect business rules to code
+# Know - Surface hidden rules before code changes
 
 ## Why Know?
 
-Know solves the tribal knowledge problem.
-"Tribal knowledge is knowledge that is not documented, and only exists in the minds of a few individuals. This creates a risk of knowledge loss if those individuals leave the organization, and makes it difficult for new team members to learn and understand the system."
+Know is the context layer that tells humans and AI agents which rules apply
+before they change code.
+
+Teams lose time and break behavior when important business rules, domain
+constraints, architecture decisions, and edge cases live only in people's heads
+or disconnected tools. Know turns those hidden constraints into pre-change code
+context: rules linked to the files, globs, or symbols they protect.
+
+Know is not a general documentation platform or knowledge base. Its value is
+not storing knowledge. Its value is making the right constraint appear at the
+moment it can prevent a bad change.
 
 ## How Know works
 
-Define rules. Link them to code. Query the rules that apply to any file, symbol, or path.
+Define rules. Link them to code. Query the rules that apply before editing a
+file, symbol, or path.
 
-Know stores rules in knowledge files — plain TOML files in a `.know/` directory, committed alongside your code. Each rule has a description, a rationale explaining why it exists, and inline links that connect it to specific code targets: files, globs, or symbols. When linked code changes, Know marks those rule-code relationships as unverified until someone re-confirms them.
+Know stores rules in knowledge files: plain TOML files in a `.know/`
+directory, committed alongside your code. Each rule has a description, a
+rationale explaining why it exists, and inline links that connect it to
+specific code targets: files, globs, or symbols. When linked code changes, Know
+marks those rule-code relationships as unverified until someone re-confirms
+them.
 
 The core command is `know context <target>`. It returns the rules that apply to a given file, symbol, or glob, along with each relationship's verification status. This is the information you need before making a change.
 
-Know is pull-based, like `git status`. You query it when you need context. Pre-change awareness, where rules surface automatically before code is edited, is achieved through integration surfaces: an IDE plugin that shows relevant rules while you work, agent hooks that inject rules into AI context before edits, or git hooks that check rule health before commits. These integrations turn `know context` from a command you run into rules that appear when they matter. See `docs/integrationSurfaces.md` for the full integration contract.
+Know is pull-based, like `git status`. You query it when you need context. Pre-change awareness, where rules surface automatically before code is edited, is achieved through integration surfaces: an IDE plugin that shows relevant rules while you work, agent hooks that inject rules into AI context before edits, or git hooks that check rule health before commits. These integrations turn `know context` from a command you run into rules that appear when they matter. See `system-architecture/integrationSurfaces.md` for the full integration contract.
 
 ## For AI agents
 
-An AI agent is only as good as the context it is given. Know provides agents with the specific rules that apply to the code they are about to change. Through agent hooks and AGENTS.md instructions, agents call `know context` before editing a file and receive exactly the constraints they need: no more, no less.
+AI agents need code-specific context before they edit, not a pile of general
+project notes after the fact. Through agent hooks and AGENTS.md instructions,
+agents call `know context` before editing a file and receive the relevant
+constraints and rationale: no more, no less.
 
 ## For developers
 
-Know gives developers the context they need when working with code. Through the IDE plugin, relevant rules surface for the active file and files being edited, similar to how the Git source control tab surfaces code changes without requiring a manual `git status` call. Through CLI and TUI flows, developers can browse, search, and maintain rules directly.
+Know helps developers avoid "I did not know that rule existed" changes. Through
+the IDE plugin, relevant rules surface for the active file and files being
+edited, similar to how the Git source control tab surfaces code changes without
+requiring a manual `git status` call. Through CLI and TUI flows, developers can
+browse, search, and maintain rules directly.
 
 ## For managers
 
-Know provides a way to oversee what rules exist and whether they are up to date and followed. It provides shared surfaces for managers and developers to maintain system constraints together, and to see where verification or coverage needs attention.
+Know makes rule health visible. Managers and technical leads can see which
+important constraints are linked to code, which relationships are unverified or
+broken, and where coverage needs attention.
 
 ## For business owners
 
-If reliability and consistency are core to your business, you need a system that gives anyone working on the codebase the right context for informed decisions. Know preserves the intent that made the system successful as the code evolves.
+If reliability and consistency are core to your business, the people and agents
+changing code need the business intent that applies to that code. Know connects
+that intent to implementation and shows when the connection needs review.
 
-Do not rely on one person's expert knowledge. Systemize the knowledge and make it available to everyone working on the system. This is what Know does.
+Do not rely on one person's expert memory. Turn critical rules into pre-change
+code context for everyone working on the system.
 
 > **Goal:** prevent 80-99% of "I didn't know that rule existed" mistakes by
 > surfacing relevant rules before a change is made.
@@ -41,30 +68,40 @@ Do not rely on one person's expert knowledge. Systemize the knowledge and make i
 A common information structure for teams today is:
 Confluence -> Jira -> Application logic
 
-Business rules, if documented at all, are stuck in Confluence pages. There is no connection to code and no signal when those rules are violated.
+Business rules, if captured at all, are stuck in Confluence pages. There is no
+connection to code and no signal when the code they protect changes.
 
 Most teams rely on implicit knowledge, often domain-specific and carried by key individuals. This creates lock-in where the project's long-term success, and ultimately the business's success, depends on those individuals not leaving.
 
-This is also a blind spot for AI agents, which cannot access that knowledge unless humans restate it every time or maintain separate documentation that may not be read.
+This is also a blind spot for AI agents, which cannot use hidden constraints
+unless humans restate them every time or the agent is given a focused way to
+retrieve them before editing.
 
-Know exists to make those rules explicit, versioned, and queryable at the point of change — through CLI, TUI, and integration surfaces that deliver rules to humans and agents before they edit code.
+Know exists to make those rules explicit, versioned, linked to code, and
+queryable before change through CLI, TUI, and integration surfaces that
+deliver rules to humans and agents before they edit code.
 
-For more in-depth information on system design, tech stack, knowledge files and directory structure, syntax, primitives, and integrations, refer to the docs directory.
-Ideas for future development are collected in `docs/futureIdeas.md`.
+For more in-depth information on system design, tech stack, knowledge files and
+directory structure, syntax, primitives, and integrations, refer to the
+`system-architecture/` directory.
+Ideas for future development are collected in
+`system-architecture/futureIdeas.md`.
 
 # Part 2 - Design
 
-## Documentation Philosophy
+## System Description Philosophy
 
-These documents describe what Know is, what problems it solves, and the system contracts that should stay true as the implementation evolves.
+These design documents describe what Know is, what problem it solves, and the
+system contracts that should stay true as the implementation evolves.
 
 They are not intended to replace implementation design in code. Exact data structures, internal algorithms, crate-level module boundaries, and low-level error handling belong in the implementation unless they define externally visible behavior or durable file formats.
 
-The documentation should stay close to the ground truth primitives: rules, links, code targets, verification, and context. When a feature requires a large explanation, that is a signal to restate the problem and ask whether the feature belongs in the baseline system.
+The system description should stay close to the ground truth primitives: rules,
+links, code targets, verification, and context. When a feature requires a large
+explanation, that is a signal to restate the user job and ask whether the
+feature belongs in the baseline system.
 
 ## Problem Framing
-
-"Tribal knowledge is knowledge that is not documented, and only exists in the minds of a few individuals. This creates a risk of knowledge loss if those individuals leave the organization, and makes it difficult for new team members to learn and understand the system."
 
 Codebases accumulate rules that are not in the code: business decisions,
 domain quirks, RBAC subtleties, edge cases, and "this is why it works this
@@ -72,8 +109,14 @@ way"-reasoning. When that knowledge lives only in people's heads or scattered
 systems, people and agents make confident changes that violate invariants they
 never saw.
 
-Know exists to make those rules explicit, versioned, and surfaced exactly
-when they matter: before code is changed.
+Know exists to surface those rules exactly when they matter: before a person or
+agent changes the code they apply to.
+
+The core job is:
+
+> When I or an AI agent am about to change unfamiliar or sensitive code, help me
+> see the non-obvious rules that matter, so I do not break business intent,
+> domain constraints, or architectural invariants by accident.
 
 ## First Principles
 
@@ -176,7 +219,7 @@ repository code without trusting the generated cache.
 | Must be cheap to write                 | One rules file per area, no opaque IDs to invent                  |
 | Must be cheap to read for agents       | Small focused output from `know context`                          |
 | Must distinguish unverified from wrong | A rule from 2022 must visibly age, not silently lie               |
-| Truth lives in code, not docs          | Code is canonical for behavior; knowledge is canonical for intent |
+| Truth lives in code, not docs          | Code is canonical for behavior; rules capture intent              |
 
 ## Principles
 
@@ -187,7 +230,7 @@ repository code without trusting the generated cache.
 4. **SQLite is the operational read model, not the source of truth.** Normal
    read commands query it; it is generated, disposable, and only the indexer
    writes to it.
-5. **Knowledge is commentary; code is canonical for behavior.** Knowledge is canonical for intent.
+5. **Rules capture intent; code is canonical for behavior.** Know does not replace code, tests, or project documentation. It links intent to the code that can invalidate it.
 6. **Pre-change awareness beats post-change validation.** Know is pull-based;
    integration surfaces such as IDE plugins, agent hooks, and `know context`
    make rule context available before code is changed.
@@ -201,10 +244,10 @@ Only two primitives are load-bearing:
 
 | Primitive | What it gives                      |
 | --------- | ---------------------------------- |
-| **Rule**  | Description, rationale and context |
-| **Link**  | A verified rule-code relationship  |
+| **Rule**  | Constraint and rationale surfaced before edits |
+| **Link**  | Code target relationship that can become unverified |
 
-Other primities are helpful but optional:
+Other primitives are helpful but optional:
 | Primitive | What it gives |
 | ---------- | ---------------------------------- |
 | **Concept** | A way to group rules by domain noun, and give agents a shared vocabulary. |
@@ -272,9 +315,15 @@ link rows.
 
 ### Why "Knowledge Files"
 
-The TOML files under `.know/rules/` and `.know/concepts/` are called **knowledge files**. The name maps directly to the problem: tribal knowledge that lives only in people's heads. These files make it explicit and connect it to code.
+The TOML files under `.know/rules/` and `.know/concepts/` are called **knowledge files**. The name maps directly to the problem: important rules often live only in people's heads. These files make those rules explicit and connect them to code.
 
-When the format matters — parsing, syntax, schema — "TOML files" or "TOML knowledge files" are equally correct. "Billing knowledge file", "billing TOML file", "billing rules TOML file" all refer to the same thing.
+"Knowledge files" is a technical term for the files. It is not the product
+promise. Know is not valuable because it stores knowledge; it is valuable
+because it turns rule files into timely context before edits.
+
+When the format matters - parsing, syntax, schema - "TOML files" or "TOML
+knowledge files" are equally correct. "Billing knowledge file", "billing TOML
+file", "billing rules TOML file" all refer to the same thing.
 
 ### Why Tree-Sitter, Not LSP
 
@@ -288,13 +337,13 @@ A file changing does not mean the rule is invalid. It means the rule must be
 re-confirmed:
 
 ```txt
-verified → unverified (linked file changed)
-unverified → verified (reviewer confirms)
+verified -> unverified (linked file changed)
+unverified -> verified (reviewer confirms)
 ```
 
 ### Why Verification Is Not Mandatory Or Prescribed
 
-The highest-leverage moment for Know is surfacing rules before code changes. Verification (re-confirmation that a rule still applies) should not create burden for developers. Teams should be able to choose when and how re-verification happens—through tests, code review, pre-commit checks, AI agents, or on-demand audits. Know _detects_ when code changes and marks rules unverified; it does not mandate the verification workflow. This flexibility allows teams to integrate Know into existing processes without adding friction.
+The highest-leverage moment for Know is surfacing rules before code changes. Verification (re-confirmation that a rule still applies) should not create burden for developers. Teams should be able to choose when and how re-verification happens through tests, code review, pre-commit checks, AI agents, or on-demand audits. Know _detects_ when code changes and marks rules unverified; it does not mandate the verification workflow. This flexibility allows teams to integrate Know into existing processes without adding friction.
 
 Unverified rules are clearly visible in reports and `know list`, making them visible debt without creating panic. A developer editing a file multiple times should not be bothered by Know warnings; nudges in reports and pre-change context are the right level of signal.
 
@@ -329,7 +378,8 @@ the constraints that can be broken by the pending change.
 
 ### Why Unlinked Rules Are Visible in Reports But Not in Context
 
-Unlinked rules are legitimate temporary work-in-progress—a team has documented a rule but hasn't yet mapped it to code. Unlinked rules should:
+Unlinked rules are legitimate temporary work-in-progress: a team has captured a
+rule but has not yet mapped it to code. Unlinked rules should:
 
 - Appear in `know list`, reports, and overviews (so the team sees them as implicit todos)
 - NOT appear in `know context` when querying specific code (they don't apply yet)
@@ -338,13 +388,14 @@ This surfaces unlinked rules as work to do, without polluting context at the mom
 
 ### What Know Is Not: Scope Boundary
 
-Know connects _specific rules to specific code_. It is not a general system rules or principles repository.
+Know connects _specific rules to specific code_. It is not a general system
+rules repository, documentation platform, or knowledge base.
 
 **Know is for:** "When editing this billing service, remember that fractional cents must round down per GAAP rules."
 
 **Know is not for:** "Our company believes in customer-first design" or "We follow SOLID principles" or general architectural philosophies.
 
-Not all rules belong in Know. If a rule applies to the entire system and is not tied to specific code, it belongs outside Know in project-level documentation such as README.md, ARCHITECTURE.md, AGENTS.md, code comments, or similar material. Know is purposefully scoped to _link-bearing rules_, making it a targeted tool for preventing "I didn't know that rule existed" mistakes in code that is being edited. This scope boundary prevents Know from becoming a dumping ground and forces teams to distinguish between general principles (project docs) and code-specific constraints (Know rules).
+Not all rules belong in Know. If a rule applies to the entire system and is not tied to specific code, it belongs outside Know in project-level documentation such as README.md, ARCHITECTURE.md, AGENTS.md, code comments, or similar material. Know is purposefully scoped to _link-bearing rules_, making it a targeted tool for preventing "I didn't know that rule existed" mistakes in code that is being edited. This scope boundary prevents Know from becoming a passive dumping ground and forces teams to distinguish between general principles (project docs) and code-specific constraints (Know rules).
 
 ### Verification: Flexible, Non-Burdensome, Multi-Party
 
@@ -356,7 +407,7 @@ When code changes, linked rules become `unverified`. **Know does not mandate how
 - **AI agents**: Agents with appropriate permissions analyze and verify rules in context
 - **On-demand**: Teams run `know check` or report generation to identify and batch-verify stale rules
 
-Know surfaces which rules are unverified (visible but not alarming), allowing teams to choose workflows that fit their process. **The system should nudge, not panic**—unverified rules are clear in reports and context, but not treated as errors that block work.
+Know surfaces which rules are unverified (visible but not alarming), allowing teams to choose workflows that fit their process. **The system should nudge, not panic**: unverified rules are clear in reports and context, but not treated as errors that block work.
 
 **AI Agent Verification Gate**: Teams should be able to configure Know to disallow AI agent verification of rules, keeping verification strictly human-controlled if desired. This respects teams that want human judgment on all rule confirmations.
 
