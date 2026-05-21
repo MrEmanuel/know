@@ -2,7 +2,7 @@
 
 This document describes Know's system modules and how they interact. It is intentionally implementation-agnostic; concrete library and runtime choices belong in `docs/techStack.md`.
 
-For specific details on the CLI commands, tech stack, Know project files and directory structure, syntax, and primitives, please refer to the respective documents in the docs directory.
+For specific details on the CLI commands, tech stack, knowledge files and directory structure, syntax, and primitives, please refer to the respective documents in the docs directory.
 
 ## System modules
 
@@ -26,7 +26,7 @@ The IDE plugin contract is documented in `docs/systemModules/idePlugin.md`.
 
 ### config parser
 
-Transforms schema-valid source files into the generated read model. This includes extracting rules, concepts, and inline rule links, then normalizing them into queryable records.
+Transforms schema-valid knowledge files into the generated read model. This includes extracting rules, concepts, and inline rule links, then normalizing them into queryable records.
 
 The parser also prepares data needed by the semantic search index. Concrete storage and semantic-search implementation choices belong in `docs/techStack.md`.
 
@@ -42,13 +42,13 @@ If validation, parsing, link resolution, lockfile generation, read-model generat
 
 The validation, parsing, link-resolution, fingerprinting, and status-derivation steps are shared system logic. `know index` runs that pipeline in generation mode and writes the committed lockfile plus generated cache data. `know check` runs the same analysis in read-only mode and does not write the lockfile or cache files.
 
-Index freshness means the active generated artifacts correspond to the current source files, approval file, resolver inputs, repository targets, and semantic-search settings. `know check` and `know index` prove this by recomputing the current resolved model, comparing its hash with the `resolved_model_hash` stored in the active SQLite read model, and checking that `.know/linkVerification.lock.toml` matches the recomputed expected lockfile. Normal read commands answer from the active read model and may inspect current files only to detect or enforce freshness. The resolved model covers parser output, `.know/linkVerification.toml`, resolver inputs, resolved target sets, target fingerprints, derived link-verification statuses, schema versions, Tree-sitter resolver inputs, and semantic-search configuration. File mtimes and watcher events may optimize freshness checks, but they are not the correctness boundary.
+Index freshness means the active generated artifacts correspond to the current knowledge files, approval file, resolver inputs, repository targets, and semantic-search settings. `know check` and `know index` prove this by recomputing the current resolved model, comparing its hash with the `resolved_model_hash` stored in the active SQLite read model, and checking that `.know/linkVerification.lock.toml` matches the recomputed expected lockfile. Normal read commands answer from the active read model and may inspect current files only to detect or enforce freshness. The resolved model covers parser output, `.know/linkVerification.toml`, resolver inputs, resolved target sets, target fingerprints, derived link-verification statuses, schema versions, Tree-sitter resolver inputs, and semantic-search configuration. File mtimes and watcher events may optimize freshness checks, but they are not the correctness boundary.
 
 ### config validator
 
-Ensures that the configuration files provided by the user are correct, complete, and adhere to the expected schema before any parsing or processing occurs.
+Ensures that the knowledge files provided by the user are correct, complete, and adhere to the expected schema before any parsing or processing occurs.
 
-Know source files use a strict schema. Unknown fields are validation errors. Tags are the supported lightweight mechanism for classification, filtering, search, context, and project-specific grouping. Tags are free-form strings and are not normalized to the rule and concept ID slug format.
+Knowledge files use a strict schema. Unknown fields are validation errors. Tags are the supported lightweight mechanism for classification, filtering, search, context, and project-specific grouping. Tags are free-form strings and are not normalized to the rule and concept ID slug format.
 
 ### link validator
 
@@ -71,7 +71,7 @@ Broken if the code target no longer resolves, or if the link itself is not prope
 
 Verification status belongs to each rule-link-code relationship. If two rules point to the same code target, each relationship is verified independently.
 
-Inline links do not have source-defined IDs. The read model may assign internal row IDs, but source files identify links by their owning rule and target metadata.
+Inline links do not have source-defined IDs. The read model may assign internal row IDs, but knowledge files identify links by their owning rule and target metadata.
 
 Rules may have zero inline links. A rule without links has the rule-level coverage state `unlinked`. This is not a link verification status, because no rule-link-code relationship exists yet. Unlinked rules are valid, searchable, and reportable, but they are not returned by target-based `know context` until linked.
 
@@ -85,7 +85,7 @@ Glob resolution respects repository ignore rules, such as `.gitignore`, by defau
 
 Path and glob target fingerprints are based on raw file contents and, for globs, the sorted resolved file set. Tree-sitter does not define the identity of path or glob links.
 
-Symbol links are resolved structurally with Tree-sitter where a supported grammar exists. Source files and generated verification entries store symbol targets in canonical file-scoped `path#symbol` form. The symbol portion is a dotted symbol path made from named structural declarations, such as classes, structs, interfaces, traits, enums, functions, methods, and similar top-level or nested declarations. Symbol links do not target arbitrary expressions, local variables, anonymous callbacks, or line numbers in the baseline system. Unsupported languages, parse failures, and unresolved symbols are broken targets. Diagnostics should distinguish `unsupported-language`, `parse-failed`, and `symbol-not-found`. Symbol target fingerprints are based on the resolved symbol body or syntax node.
+Symbol links are resolved structurally with Tree-sitter where a supported grammar exists. Knowledge files and generated verification entries store symbol targets in canonical file-scoped `path#symbol` form. The symbol portion is a dotted symbol path made from named structural declarations, such as classes, structs, interfaces, traits, enums, functions, methods, and similar top-level or nested declarations. Symbol links do not target arbitrary expressions, local variables, anonymous callbacks, or line numbers in the baseline system. Unsupported languages, parse failures, and unresolved symbols are broken targets. Diagnostics should distinguish `unsupported-language`, `parse-failed`, and `symbol-not-found`. Symbol target fingerprints are based on the resolved symbol body or syntax node.
 
 When a link needs to be mended, the system will notify the user in multiple ways:
 
@@ -98,15 +98,15 @@ TODO: Define the work flow for mending links, and the user experience around it.
 
 `.know/linkVerification.toml` records the rule, link, and target fingerprints that were current when the user verified the rule-link-code relationship. The file is machine-produced, deterministic, and committed to Git. A verified relationship has to match all three current fingerprints. If the code, rule, or link definition is updated, the relationship becomes unverified and needs to be verified again. Know can recompute current fingerprints at any time, but it only updates `.know/linkVerification.toml` when the user verifies the relationship.
 
-`.know/linkVerification.lock.toml` records the latest computed status reflection for rule-link-code relationships. It is machine-produced, deterministic, and committed to Git. It is not authoritative unless `know check` recomputes the same expected lockfile from the current `.know` source files and repository code.
+`.know/linkVerification.lock.toml` records the latest computed status reflection for rule-link-code relationships. It is machine-produced, deterministic, and committed to Git. It is not authoritative unless `know check` recomputes the same expected lockfile from the current knowledge files and repository code.
 
 Historical changes are documented in git. Not by the know system itself. The know system only documents the current state of the links, rules, and concepts.
 
 ### read model
 
-The generated read model stores normalized rule, concept, link, target, status, diagnostic, and search data. It is ephemeral: the source of truth is always the source files and `.know/linkVerification.toml`, while the committed lockfile is the reviewable generated reflection. The read model can be recreated at any time by re-indexing the current source files, approval file, and repository targets.
+The generated read model stores normalized rule, concept, link, target, status, diagnostic, and search data. It is ephemeral: the source of truth is always the knowledge files and `.know/linkVerification.toml`, while the committed lockfile is the reviewable generated reflection. The read model can be recreated at any time by re-indexing the current knowledge files, approval file, and repository targets.
 
-The read model is Know's operational read surface. Normal read commands query it instead of using reparsed `.know` source files as their answer path. It is only written to by the indexer, and read-only for all other purposes. It provides fast access to rules data for command-line and interactive flows, and provides the query surface for semantic search.
+The read model is Know's operational read surface. Normal read commands query it instead of reparsing knowledge files as their answer path. It is only written to by the indexer, and read-only for all other purposes. It provides fast access to rules data for command-line and interactive flows, and provides the query surface for semantic search.
 
 SQLite mirrors the query-relevant records from `.know/linkVerification.lock.toml`: link status, status reasons, unlinked rules, and lockfile hashes. This is needed because commands do not only display the lockfile; they join status data with rules, concepts, resolved targets, diagnostics, and search documents. The committed lockfile remains the reviewable generated artifact, while SQLite is the fast query projection.
 

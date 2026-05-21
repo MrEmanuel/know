@@ -1,10 +1,10 @@
 # Config validator
 
-Config validation is a first-class library function, used by both the CLI and the TUI. It ensures that the configuration files provided by the user are correct, complete, and adhere to the expected schema before any parsing or processing occurs.
+Config validation is a first-class library function, used by both the CLI and the TUI. It ensures that the knowledge files provided by the user are correct, complete, and adhere to the expected schema before any parsing or processing occurs.
 
-Know source files use a strict schema. Unknown fields are validation errors. This includes unknown fields on rules, concepts, inline links, the generated link-verification approval file, and the generated link-verification lockfile.
+Knowledge files use a strict schema. Unknown fields are validation errors. This includes unknown fields on rules, concepts, inline links, the generated link-verification approval file, and the generated link-verification lockfile.
 
-Strict validation exists so spelling mistakes in source files do not silently remove required meaning. For example, `rationle` must fail validation instead of being ignored as an unknown field.
+Strict validation exists so spelling mistakes in knowledge files do not silently remove required meaning. For example, `rationle` must fail validation instead of being ignored as an unknown field.
 
 Tags are the supported lightweight mechanism for classification, filtering, search, context, and project-specific grouping.
 
@@ -20,9 +20,9 @@ Rules may have zero inline links. A rule without links is valid and is classifie
 
 `include_ignored` is valid only on glob links and defaults to `false`. Using `include_ignored` on a path or symbol link is invalid.
 
-Path and glob targets in source files must use normalized repository-root-relative paths with `/` separators. Absolute paths, `..` segments, leading `./`, and backslashes are invalid in source files and generated verification entries.
+Path and glob targets in knowledge files must use normalized repository-root-relative paths with `/` separators. Absolute paths, `..` segments, leading `./`, and backslashes are invalid in knowledge files and generated verification entries.
 
-Symbol targets in source files and generated verification entries must use file-scoped `path#symbol` form. The path portion follows the same canonical path rules as path links. Symbol targets without a `#` separator are invalid in source files, even though CLI commands may accept bare symbol input as a convenience when it resolves unambiguously.
+Symbol targets in knowledge files and generated verification entries must use file-scoped `path#symbol` form. The path portion follows the same canonical path rules as path links. Symbol targets without a `#` separator are invalid in knowledge files, even though CLI commands may accept bare symbol input as a convenience when it resolves unambiguously.
 
 `.know/linkVerification.lock.toml` is generated but still strictly validated. Link lockfile statuses must be `verified`, `unverified`, or `broken`. Lockfile reasons must use known reason codes, such as `no-verification-entry`, `rule-fingerprint-changed`, `link-fingerprint-changed`, `target-fingerprint-changed`, `target-not-found`, `glob-empty`, `unsupported-language`, `parse-failed`, `symbol-not-found`, or `invalid-link-definition`.
 

@@ -22,7 +22,7 @@ The interactive terminal interface uses `Ratatui`.
 
 ## Config parsing
 
-Know source files are TOML and are parsed through `serde`.
+Knowledge files are TOML and are parsed through `serde`.
 
 `serde` owns deserialization into typed config structs. Validation, normalization, and indexing are system concerns, not serde concerns.
 
@@ -30,7 +30,7 @@ Know source files are TOML and are parsed through `serde`.
 
 Tree-sitter is used for language-aware code analysis.
 
-Symbol targets use canonical file-scoped `path#symbol` form in source files and generated verification entries. Tree-sitter resolves the symbol portion where a supported grammar exists. The symbol portion is a dotted symbol path made from named structural declarations, such as classes, structs, interfaces, traits, enums, functions, methods, and similar top-level or nested declarations. Unsupported languages, parse failures, and unresolved symbols are broken targets rather than unverified relationships.
+Symbol targets use canonical file-scoped `path#symbol` form in knowledge files and generated verification entries. Tree-sitter resolves the symbol portion where a supported grammar exists. The symbol portion is a dotted symbol path made from named structural declarations, such as classes, structs, interfaces, traits, enums, functions, methods, and similar top-level or nested declarations. Unsupported languages, parse failures, and unresolved symbols are broken targets rather than unverified relationships.
 
 Tree-sitter also powers code-aware user experience features in the CLI, TUI, read model, and search index where supported grammars are available. These features include:
 
@@ -57,7 +57,7 @@ Tree-sitter may enhance browsing, authoring, previews, search chunking, repair s
 
 SQLite is the generated local read model and the operational read projection for normal read commands.
 
-The durable source of truth is the human-authored `.know` TOML files plus `.know/linkVerification.toml`. `.know/linkVerification.lock.toml` is a committed generated reflection, not an approval source. SQLite can be deleted and rebuilt from the current source files, approval file, and repository targets. The indexer is the only writer; command and TUI flows read from it.
+The durable source of truth is the human-authored `.know` TOML files plus `.know/linkVerification.toml`. `.know/linkVerification.lock.toml` is a committed generated reflection, not an approval source. SQLite can be deleted and rebuilt from the current knowledge files, approval file, and repository targets. The indexer is the only writer; command and TUI flows read from it.
 
 Deleting SQLite does not lose project knowledge, but cache-backed read commands such as `know context`, `know rule list`, `know status`, `know report`, `know browse`, `know search`, and `know query` require a compatible generated read model. `know check` is the read-only source-recompute path that validates current source state without trusting the generated cache.
 
@@ -73,7 +73,7 @@ Rust access to SQLite uses `sqlx`.
 
 Semantic search is implemented as a generated index attached to the local read model.
 
-The exact vector extension/model is not yet selected. The system design should only assume that semantic search can index rules, concepts, and inline rule links, and that the index can be regenerated from source files.
+The exact vector extension/model is not yet selected. The system design should only assume that semantic search can index rules, concepts, and inline rule links, and that the index can be regenerated from knowledge files.
 
 If semantic search uses generated files outside SQLite, those files must store the same `resolved_model_hash` as the SQLite read model. A semantic index with a missing or mismatched hash is stale and must be rebuilt.
 

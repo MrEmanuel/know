@@ -1,6 +1,6 @@
 # Indexer
 
-The indexer builds Know's committed link-verification lockfile, generated local read model, and semantic search index from the durable source files in `.know/` plus current repository targets.
+The indexer builds Know's committed link-verification lockfile, generated local read model, and semantic search index from the knowledge files in `.know/` plus current repository targets.
 
 The source of truth is the human-authored TOML files plus `.know/linkVerification.toml`. `.know/linkVerification.lock.toml` is a committed generated reflection of current derived link-verification state. The generated cache is disposable and can always be rebuilt with `know index`.
 
@@ -65,7 +65,7 @@ The indexer consumes the resolved model and writes two generated outputs: a comm
 
 The lockfile stores the latest computed link-verification reflection: source and approval-file hashes, the resolved model hash, each link's derived status, status reasons, and unlinked rules. It is deterministic, human-readable, and committed to Git so current Know state can be reviewed with normal version-control tools.
 
-The lockfile is not authoritative by itself. A relationship is currently verified only when the analyzer recomputes the same result from `.know` source files, `.know/linkVerification.toml`, current repository targets, and resolver settings. If the recomputed expected lockfile differs from the committed lockfile, the committed reflection is stale.
+The lockfile is not authoritative by itself. A relationship is currently verified only when the analyzer recomputes the same result from knowledge files, `.know/linkVerification.toml`, current repository targets, and resolver settings. If the recomputed expected lockfile differs from the committed lockfile, the committed reflection is stale.
 
 The lockfile intentionally does not duplicate the per-link approval fingerprints stored in `.know/linkVerification.toml`. It stores `link_verification_hash` and derived status records instead. This keeps approval fingerprints in one file while still making approval changes visible through the lockfile hash and any resulting status changes.
 
@@ -75,7 +75,7 @@ The lockfile intentionally does not duplicate the per-link approval fingerprints
 
 SQLite is Know's operational read projection. The source of truth remains the
 human-authored `.know` TOML files plus `.know/linkVerification.toml`, but normal
-read commands query the active read model instead of using reparsed source
+read commands query the active read model instead of reparsing knowledge
 files as their answer path.
 
 SQLite mirrors the lockfile's query-relevant data because most commands need to join link-verification state with other generated data.
@@ -119,7 +119,7 @@ If semantic search uses files outside SQLite, those files must record the same `
 ## Freshness
 
 Freshness is the claim that the active generated artifacts were produced from
-the current source files, approval file, resolver inputs, repository targets,
+the current knowledge files, approval file, resolver inputs, repository targets,
 and semantic-search settings.
 
 `know check` and `know index` prove freshness by recomputing the current

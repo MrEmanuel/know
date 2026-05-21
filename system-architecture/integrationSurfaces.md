@@ -9,7 +9,7 @@ This document describes the contracts between Know and the systems that surface 
 Know provides two commands that integration surfaces consume:
 
 1. **`know context`**: Returns rules, rationale, verification status, and freshness for a given code target. Supports `--format json` for structured output and `--count` for cheap probing.
-2. **`know check`**: Validates rule-link-code health from source files without trusting generated cache. Returns actionable diagnostics and meaningful exit codes for CI.
+2. **`know check`**: Validates rule-link-code health from knowledge files without trusting generated cache. Returns actionable diagnostics and meaningful exit codes for CI.
 
 Every integration surface ultimately calls one or both commands. The difference between surfaces is when the call happens and how results are presented.
 
@@ -82,7 +82,7 @@ Git hooks are not part of Know itself. Know provides commands and exit codes tha
 
 ### CI/CD pipeline integration
 
-`know check` is designed for CI. It recomputes rule-link-code health from source files without trusting generated cache, and exits nonzero when selected failure policy is violated.
+`know check` is designed for CI. It recomputes rule-link-code health from knowledge files without trusting generated cache, and exits nonzero when selected failure policy is violated.
 
 Useful patterns:
 

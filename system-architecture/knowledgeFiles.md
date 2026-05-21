@@ -1,4 +1,4 @@
-# Know project files and `.know` directory structure
+# Knowledge files and `.know` directory structure
 
 Know stores its project data in a `.know/` directory at the repository root.
 

@@ -10,7 +10,7 @@ Path links must resolve to exactly one repository file. A directory is not a val
 
 Path and glob targets are resolved from normalized repository-root-relative paths with `/` separators. Absolute paths, `..` segments, leading `./`, and backslashes are invalid in source link definitions.
 
-Symbol links use canonical file-scoped `path#symbol` targets in source files and generated verification entries. The path portion follows the same canonical path rules as path links. The symbol portion is resolved structurally with Tree-sitter where a supported grammar exists.
+Symbol links use canonical file-scoped `path#symbol` targets in knowledge files and generated verification entries. The path portion follows the same canonical path rules as path links. The symbol portion is resolved structurally with Tree-sitter where a supported grammar exists.
 
 The symbol portion is a dotted symbol path made from named structural declarations, such as classes, structs, interfaces, traits, enums, functions, methods, and similar top-level or nested declarations. Symbol links do not target arbitrary expressions, local variables, anonymous callbacks, or line numbers in the baseline system.
 

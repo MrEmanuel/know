@@ -9,7 +9,7 @@ The command interface does not own domain logic. It delegates to the underlying 
 ## Read model contract
 
 Know's normal read commands use the generated SQLite read model as their
-operational read surface. They do not use reparsed `.know` source files as
+operational read surface. They do not use reparsed knowledge files as
 their normal answer path.
 
 This includes target context, rule listing, rule inspection, status summaries,
@@ -18,7 +18,7 @@ is missing or incompatible, these commands should fail with actionable guidance
 to run `know index`. If the read model is stale, commands should report the
 freshness problem and then follow their command-specific freshness policy.
 
-`know check` is the main exception. It recomputes from the current source files,
+`know check` is the main exception. It recomputes from the current knowledge files,
 approval file, and repository code in read-only mode so CI and audits can prove
 source health without trusting the generated cache.
 
@@ -44,7 +44,7 @@ Authoring commands may prompt for missing inputs when stdin is an interactive te
 
 Authoring commands must not require prompts. When stdin is not interactive, or when `--no-input` is passed, commands fail with an actionable error if required input is missing.
 
-Commands that write source files or verification data should support `--dry-run` where practical, printing the planned change without writing it.
+Commands that write knowledge files or verification data should support `--dry-run` where practical, printing the planned change without writing it.
 
 ## Guided next actions
 
@@ -106,9 +106,9 @@ Path and glob completion should use deterministic repository-root filesystem dis
 
 Completion should remain an aid, not a requirement. All commands must work without shell completion.
 
-CLI commands may accept local OS-style path input from users, but authored source files and generated verification entries must use normalized repository-root-relative paths with `/` separators.
+CLI commands may accept local OS-style path input from users, but knowledge files and generated verification entries must use normalized repository-root-relative paths with `/` separators.
 
-CLI commands may also accept bare symbol input, such as `Invoice.calculateTotal`, when it resolves unambiguously. When writing source files or generated verification entries, Know must store symbol targets in canonical file-scoped `path#symbol` form.
+CLI commands may also accept bare symbol input, such as `Invoice.calculateTotal`, when it resolves unambiguously. When writing knowledge files or generated verification entries, Know must store symbol targets in canonical file-scoped `path#symbol` form.
 
 Know has the following commands:
 
@@ -136,7 +136,7 @@ If a target is ambiguous, the command should fail with an actionable message in 
 Explicit target-kind flags should be available as escape hatches for automation and ambiguous cases.
 
 `know context` is a read command. It may inspect enough current state to detect
-stale generated views, but it must not write `.know` source files,
+stale generated views, but it must not write knowledge files,
 `.know/linkVerification.toml`, `.know/linkVerification.lock.toml`, or generated
 cache files as a side effect.
 
@@ -153,7 +153,7 @@ telling the user to run `know index`.
 Freshness is based on the metadata and hashes written with the active read
 model, including `resolved_model_hash` and the hash of
 `.know/linkVerification.lock.toml`. Commands that require fresh output must
-prove the active read model still corresponds to the current source files,
+prove the active read model still corresponds to the current knowledge files,
 approval file, lockfile, resolver inputs, and repository targets before
 answering. Otherwise the generated cache is stale.
 
@@ -289,9 +289,9 @@ Semantic search for any rules, concepts, or (clickable) links. Returns an intera
 
 Run a read-only health check for the Know system.
 
-`know check` validates the `.know` source files, resolves inline links, derives verification status, and reports actionable issues. It must not write source files, `.know/linkVerification.toml`, `.know/linkVerification.lock.toml`, or generated indexes.
+`know check` validates the knowledge files, resolves inline links, derives verification status, and reports actionable issues. It must not write knowledge files, `.know/linkVerification.toml`, `.know/linkVerification.lock.toml`, or generated indexes.
 
-`know check` recomputes from the current source files, `.know/linkVerification.toml`, and current repository code. It does not trust an existing generated read model or `.know/linkVerification.lock.toml` for pass/fail decisions. It compares the recomputed expected lockfile with the committed lockfile and reports `stale-lockfile` when they differ.
+`know check` recomputes from the current knowledge files, `.know/linkVerification.toml`, and current repository code. It does not trust an existing generated read model or `.know/linkVerification.lock.toml` for pass/fail decisions. It compares the recomputed expected lockfile with the committed lockfile and reports `stale-lockfile` when they differ.
 
 By default, `know check` prints a concise report with counts and actionable issues. A clean check should make it obvious that all rule-link-code relationships are verified and `.know/linkVerification.lock.toml` is fresh.
 
@@ -305,7 +305,7 @@ Useful options include:
 
 `source-issue` means any current source-state problem: invalid definitions, broken links, unverified relationships, or unlinked rules. It does not include `stale-lockfile` or `stale-index`, because `know check` recomputes from source and does not depend on generated artifacts for correctness. Workflows that require the committed reflection or generated cache to be fresh should explicitly use `--fail-on stale-lockfile` or `--fail-on stale-index`.
 
-`stale-lockfile` means `.know/linkVerification.lock.toml` is missing, invalid, or differs from the deterministic lockfile Know would generate from the current `.know` source files, `.know/linkVerification.toml`, current repository code, and resolver settings.
+`stale-lockfile` means `.know/linkVerification.lock.toml` is missing, invalid, or differs from the deterministic lockfile Know would generate from the current knowledge files, `.know/linkVerification.toml`, current repository code, and resolver settings.
 
 `stale-index` means the generated cache is missing, stale, incompatible with the current read-model contract, built against a different normalized lockfile hash, or paired with a semantic-search sidecar whose `resolved_model_hash` does not match SQLite.
 
@@ -332,7 +332,7 @@ Useful options include:
 
 Validate and parse the .know file structure, then update the committed link-verification lockfile, generated read model, and semantic search index.
 
-`know index` performs an atomic full rebuild. It recomputes the current resolved model from `.know` source files, `.know/linkVerification.toml`, and current repository code. It writes `.know/linkVerification.lock.toml` and generated cache data to temporary locations and only replaces `.know/linkVerification.lock.toml`, `.know/cache/know.sqlite`, and `.know/cache/semantic/` after validation, parsing, link resolution, lockfile generation, read-model generation, and semantic-index generation all succeed.
+`know index` performs an atomic full rebuild. It recomputes the current resolved model from knowledge files, `.know/linkVerification.toml`, and current repository code. It writes `.know/linkVerification.lock.toml` and generated cache data to temporary locations and only replaces `.know/linkVerification.lock.toml`, `.know/cache/know.sqlite`, and `.know/cache/semantic/` after validation, parsing, link resolution, lockfile generation, read-model generation, and semantic-index generation all succeed.
 
 If indexing fails, the existing lockfile and cache remain unchanged and the command reports actionable diagnostics.
 

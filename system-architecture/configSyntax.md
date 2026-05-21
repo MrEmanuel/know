@@ -1,6 +1,6 @@
 # Config syntax
 
-Definitions and examples of the syntax used in the .toml config files for rules and concepts.
+Definitions and examples of the syntax used in knowledge files (`.toml` files under `.know/`) for rules and concepts.
 
 Tags can be added to rules, inline links, and concepts for better organization, discoverability, semantic search, and context. They can be used for filtering and searching in the CLI and TUI.
 
@@ -8,7 +8,7 @@ Links are defined inline under rules. The source-of-truth relationship is the ru
 
 Inline links do not have their own required IDs in source files. Their source-defined identity is scoped to the owning rule.
 
-Know source files use a strict schema. Unknown fields are validation errors so typos cannot silently change system meaning. Tags are the supported lightweight mechanism for classification, filtering, search, context, and project-specific grouping.
+Know knowledge files use a strict schema. Unknown fields are validation errors so typos cannot silently change system meaning. Tags are the supported lightweight mechanism for classification, filtering, search, context, and project-specific grouping.
 
 ## Tags
 
@@ -56,7 +56,7 @@ include_ignored = false
 
 An inline link belongs to exactly one rule. Within that rule, the same `kind` and `target` pair must not be repeated. Link definitions describe author intent only; they do not contain verification status, timestamps, or fingerprints.
 
-Path, glob, and symbol targets in source files use canonical repository-root-relative target forms. Generated verification entries use the same canonical target forms.
+Path, glob, and symbol targets in knowledge files use canonical repository-root-relative target forms. Generated verification entries use the same canonical target forms.
 
 Path and glob targets use repository-root-relative paths with `/` separators. They must not be absolute paths, contain `..` segments, start with `./`, or use backslashes.
 
@@ -131,7 +131,7 @@ For path links, `target_fingerprint` represents the resolved file's content fing
 
 For glob links, `target_fingerprint` represents the sorted resolved target file set and each resolved file's content fingerprint. Directories are not included. If a new file starts matching the glob, an existing file stops matching, or a matched file changes, the target fingerprint changes.
 
-For symbol links, `target_fingerprint` represents the resolved syntax node or symbol body fingerprint. Symbol resolution uses Tree-sitter where a supported grammar exists. Source files and generated verification entries store symbol targets in canonical `path#symbol` form. Unsupported languages, parse failures, and unresolved symbols are broken targets.
+For symbol links, `target_fingerprint` represents the resolved syntax node or symbol body fingerprint. Symbol resolution uses Tree-sitter where a supported grammar exists. Knowledge files and generated verification entries store symbol targets in canonical `path#symbol` form. Unsupported languages, parse failures, and unresolved symbols are broken targets.
 
 ## Link verification lockfile
 
@@ -139,7 +139,7 @@ Current derived link-verification state is stored in `.know/linkVerification.loc
 
 The lockfile is a human-readable reflection of the current repository state, similar to a dependency lockfile. It is useful in code review because changes to code, rules, links, or verification approvals produce visible diffs in `.know/`.
 
-The lockfile is not the authority for whether a relationship is currently verified. Know proves that by recomputing the expected lockfile from `.know` source files plus the current repository code and comparing the result with the committed file. A stale lockfile means the committed reflection no longer describes the current repository.
+The lockfile is not the authority for whether a relationship is currently verified. Know proves that by recomputing the expected lockfile from knowledge files plus the current repository code and comparing the result with the committed file. A stale lockfile means the committed reflection no longer describes the current repository.
 
 ```toml
 version = 1

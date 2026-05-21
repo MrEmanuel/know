@@ -9,7 +9,7 @@ Know solves the tribal knowledge problem.
 
 Define rules. Link them to code. Query the rules that apply to any file, symbol, or path.
 
-Know stores rules as plain TOML files in a `.know/` directory, committed alongside your code. Each rule has a description, a rationale explaining why it exists, and inline links that connect it to specific code targets: files, globs, or symbols. When linked code changes, Know marks those rule-code relationships as unverified until someone re-confirms them.
+Know stores rules in knowledge files — plain TOML files in a `.know/` directory, committed alongside your code. Each rule has a description, a rationale explaining why it exists, and inline links that connect it to specific code targets: files, globs, or symbols. When linked code changes, Know marks those rule-code relationships as unverified until someone re-confirms them.
 
 The core command is `know context <target>`. It returns the rules that apply to a given file, symbol, or glob, along with each relationship's verification status. This is the information you need before making a change.
 
@@ -47,9 +47,9 @@ Most teams rely on implicit knowledge, often domain-specific and carried by key 
 
 This is also a blind spot for AI agents, which cannot access that knowledge unless humans restate it every time or maintain separate documentation that may not be read.
 
-Know addresses this by connecting explicit rules to code, and by making those rules queryable at edit time through CLI, TUI, and integration surfaces.
+Know exists to make those rules explicit, versioned, and queryable at the point of change — through CLI, TUI, and integration surfaces that deliver rules to humans and agents before they edit code.
 
-For more in-depth information on system design, tech stack, Know project files and directory structure, syntax, primitives, and integrations, refer to the docs directory.
+For more in-depth information on system design, tech stack, knowledge files and directory structure, syntax, primitives, and integrations, refer to the docs directory.
 Ideas for future development are collected in `docs/futureIdeas.md`.
 
 # Part 2 - Design
@@ -163,7 +163,7 @@ records. SQLite is the right surface for that read path.
 
 SQLite remains disposable. It is never the approval source, and deleting it
 does not lose project knowledge. `know check` is the source-recompute path: it
-validates current `.know` source files, `.know/linkVerification.toml`, and
+validates current knowledge files, `.know/linkVerification.toml`, and
 repository code without trusting the generated cache.
 
 ## Forcing Constraints
