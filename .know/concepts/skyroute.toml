@@ -1,0 +1,9 @@
+[[concepts]]
+id = "passenger-category"
+description = "An age-based fare and seating classification evaluated for one passenger on one segment departure date."
+tags = ["skyroute", "fare"]
+
+[[concepts]]
+id = "minor-unit-money"
+description = "A monetary amount represented as an integer count of the currency's smallest unit."
+tags = ["skyroute", "money"]

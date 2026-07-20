@@ -63,6 +63,52 @@ code context for everyone working on the system.
 > **Goal:** prevent 80-99% of "I didn't know that rule existed" mistakes by
 > surfacing relevant rules before a change is made.
 
+## Install
+
+On macOS or Linux:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/MrEmanuel/know/master/install.sh | sh
+```
+
+This installs the latest checksum-verified binary to `~/.cargo/bin/know`.
+Running the command again safely replaces the existing binary with the latest
+release. Windows is not supported by this hackathon demo.
+
+## Try the 90-second demo
+
+The included SkyRoute playground demonstrates a domain rule that is easy for a
+coding agent to miss: a passenger can turn two during a trip, so their fare and
+seat category must be calculated independently for every flight segment.
+
+```sh
+git clone https://github.com/MrEmanuel/know.git
+cd know
+./install.sh
+./try-demo.sh
+```
+
+The demo runs a two-leg itinerary, shows the verified rules linked to its
+pricing engine, and prints a deliberately dangerous refactoring prompt. This
+walkthrough targets **Codex CLI specifically**; the VS Code extension is not
+part of the demo.
+
+1. Start Codex from the repository with `codex`.
+2. Run `/hooks` and trust the repository hook if prompted.
+3. Paste the prompt printed by `./try-demo.sh`:
+
+   > Simplify SkyRoute by calculating passenger category once when the booking
+   > is created and storing it on Passenger. Reuse it for every flight segment.
+
+Before Codex edits protected code, Know injects the second-birthday rule and
+its rationale directly into the agent's context:
+
+![Codex CLI uses Know to surface the SkyRoute rule](images/CodexCliExample.png)
+
+The hook is intentionally advisory: it gives Codex the missing domain
+knowledge, while the human remains responsible for deciding whether a changed
+rule-code relationship should be verified.
+
 ## The problem
 
 A common information structure for teams today is:
@@ -211,15 +257,15 @@ repository code without trusting the generated cache.
 
 ## Forcing Constraints
 
-| Constraint                             | Implication                                                       |
-| -------------------------------------- | ----------------------------------------------------------------- |
-| Must survive a person leaving          | Plain text + Git                                                  |
-| Must survive a refactor                | Links must be semantic where possible                             |
-| Must survive a rename                  | Links should move with symbols, or break loudly                   |
-| Must be cheap to write                 | One rules file per area, no opaque IDs to invent                  |
-| Must be cheap to read for agents       | Small focused output from `know context`                          |
-| Must distinguish unverified from wrong | A rule from 2022 must visibly age, not silently lie               |
-| Truth lives in code, not docs          | Code is canonical for behavior; rules capture intent              |
+| Constraint                             | Implication                                          |
+| -------------------------------------- | ---------------------------------------------------- |
+| Must survive a person leaving          | Plain text + Git                                     |
+| Must survive a refactor                | Links must be semantic where possible                |
+| Must survive a rename                  | Links should move with symbols, or break loudly      |
+| Must be cheap to write                 | One rules file per area, no opaque IDs to invent     |
+| Must be cheap to read for agents       | Small focused output from `know context`             |
+| Must distinguish unverified from wrong | A rule from 2022 must visibly age, not silently lie  |
+| Truth lives in code, not docs          | Code is canonical for behavior; rules capture intent |
 
 ## Principles
 
@@ -242,9 +288,9 @@ repository code without trusting the generated cache.
 
 Only two primitives are load-bearing:
 
-| Primitive | What it gives                      |
-| --------- | ---------------------------------- |
-| **Rule**  | Constraint and rationale surfaced before edits |
+| Primitive | What it gives                                       |
+| --------- | --------------------------------------------------- |
+| **Rule**  | Constraint and rationale surfaced before edits      |
 | **Link**  | Code target relationship that can become unverified |
 
 Other primitives are helpful but optional:
@@ -445,11 +491,40 @@ The baseline system focuses on developer and agent workflows; multi-party verifi
 
 ## Current Status
 
-This project currently contains no production code.
+Know now has a working Rust MVP that proves the documented baseline lifecycle
+for path and glob links. The source is still intentionally small: it implements
+the core before expanding into symbol resolution, TUI, IDE, and semantic-search
+surfaces.
 
-Instead, the first phase has been dedicated entirely to designing the system in detail before implementation. The repository consists primarily of Markdown specifications describing the architecture, CLI, workflows, business rules, UX, and design decisions.
+### Install
 
-The goal is to produce a complete, coherent specification that can be implemented with minimal ambiguity, rather than discovering the design while writing code.
+```sh
+./install.sh
+```
+
+The checkout installer uses the same checksum-verified release described above,
+with a local Cargo build as a fallback.
+
+### Use Know in another repository
+
+```sh
+cd /path/to/your/repository
+know init
+# Edit .know/rules/example.toml, then:
+know index
+know context README.md
+know verify --all
+know check
+```
+
+This repository also demonstrates automatic Codex integration through
+`.codex/hooks.json` and `AGENTS.md`. The native `know hook codex` adapter reads
+pending `apply_patch` targets and injects matching Know context before the edit.
+
+After linked code changes, `know check --fail-on unverified` recomputes source
+state and reports the relationship as unverified. `know context` warns when its
+SQLite read model is stale; run `know index` (or use `--require-fresh`) before
+relying on refreshed context.
 
 ### Development Process
 
@@ -457,13 +532,14 @@ This project has been developed almost entirely using OpenAI Codex as a collabor
 
 Rather than asking Codex to generate code, I use it to:
 
-* Critically review the design.
-* Challenge assumptions and identify ambiguities.
-* Ask clarifying questions through a Socratic workflow.
-* Refine and rewrite the Markdown specifications.
-* Research best practices and compare alternative designs.
+- Critically review the design.
+- Challenge assumptions and identify ambiguities.
+- Ask clarifying questions through a Socratic workflow.
+- Refine and rewrite the Markdown specifications.
+- Research best practices and compare alternative designs.
 
-The implementation has been intentionally postponed until the design is sufficiently well specified.
+Implementation was intentionally postponed until the design was sufficiently
+well specified. The MVP is now the first test of that specification.
 
 ### Why?
 

@@ -1,0 +1,18 @@
+{
+  "description": "Inject Know rules before Codex edits linked files.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "know hook codex",
+            "timeout": 10,
+            "statusMessage": "Loading Know context"
+          }
+        ]
+      }
+    ]
+  }
+}

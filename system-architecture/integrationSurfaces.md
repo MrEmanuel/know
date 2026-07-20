@@ -36,7 +36,15 @@ The IDE plugin is a maintained part of Know. VS Code is the primary target. The 
 
 ### Agent instructions (AGENTS.md)
 
-Know should provide a documented agent integration contract: a clear, stable description of how AI agents interact with Know when editing code in a repository. `know init` should generate a `.know/AGENTS.md` snippet that agents can discover and read.
+Know should provide a documented agent integration contract: a clear, stable
+description of how AI agents interact with Know when editing code in a
+repository. `know init` should generate a mergeable agent-instructions snippet.
+
+For Codex specifically, the active instructions belong in the repository's
+root `AGENTS.md`, because that is the durable project-guidance surface Codex
+discovers automatically. Know must not overwrite an existing file. An init
+helper may instead generate a mergeable snippet under `.know/` and tell the
+user where it belongs.
 
 The agent contract should include:
 
@@ -61,6 +69,14 @@ Agent hooks should:
 - Inject returned rules into the agent context for that operation.
 - Stay quiet when no rules apply.
 - Handle stale or missing read model errors gracefully.
+
+The first maintained adapter is Codex. A trusted repository
+`.codex/hooks.json` matches `PreToolUse` for `apply_patch`/`Edit`/`Write` and
+runs `know hook codex`. The adapter reads pending patch targets from the hook's
+JSON input, looks up matching rule context, and returns it as model-visible
+`additionalContext`. It stays quiet when no rules apply and warns without
+blocking when generated context is unavailable. Codex requires users to review
+and trust new or changed repository hooks before they run.
 
 ### Agent plugins
 

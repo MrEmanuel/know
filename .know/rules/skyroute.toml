@@ -1,0 +1,48 @@
+[[rules]]
+id = "classify-passenger-per-segment"
+description = "Passenger category must be calculated separately for every segment using that segment's local departure date; never store one itinerary-wide category on Passenger."
+rationale = "A passenger can turn two or twelve during a trip. Their category can therefore change between outbound and return flights, affecting both fare and seat requirements."
+concepts = ["passenger-category"]
+tags = ["skyroute", "fare", "compliance"]
+
+[[rules.links]]
+target = "examples/skyroute/skyroute/models.py"
+kind = "path"
+
+[[rules.links]]
+target = "examples/skyroute/skyroute/passenger.py"
+kind = "path"
+
+[[rules.links]]
+target = "examples/skyroute/skyroute/pricing.py"
+kind = "path"
+
+[[rules.links]]
+target = "examples/skyroute/skyroute/quote.py"
+kind = "path"
+
+[[rules]]
+id = "calculate-fares-in-minor-units"
+description = "Fare calculations must use integer minor units and explicit rational factors; floating-point money is forbidden."
+rationale = "Binary floating point can introduce rounding drift, while itinerary line items must reconcile exactly with their total."
+concepts = ["minor-unit-money"]
+tags = ["skyroute", "money"]
+
+[[rules.links]]
+target = "examples/skyroute/skyroute/**/*.py"
+kind = "glob"
+
+[[rules]]
+id = "retain-segment-quote-explanations"
+description = "Every quoted segment must retain an explanation containing the passenger category, departure date, and fare factor used."
+rationale = "Customer support must be able to explain why two legs in one itinerary received different fares without reconstructing historical logic."
+concepts = ["passenger-category"]
+tags = ["skyroute", "audit"]
+
+[[rules.links]]
+target = "examples/skyroute/skyroute/pricing.py"
+kind = "path"
+
+[[rules.links]]
+target = "examples/skyroute/skyroute/quote.py"
+kind = "path"

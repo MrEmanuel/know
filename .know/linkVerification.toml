@@ -1,0 +1,65 @@
+version = 1
+
+[[links]]
+rule = "calculate-fares-in-minor-units"
+kind = "glob"
+target = "examples/skyroute/skyroute/**/*.py"
+rule_fingerprint = "sha256:a927d337faf1f3d037575b1f13eeae8c53494106394569fedfc27554c0c79e62"
+link_fingerprint = "sha256:a07263016593c303c12ba65b81d5a5b9992976efdbec78fdf37b3ad0c98af924"
+target_fingerprint = "sha256:de1bd45e36ffde25c389e7c8af1c5ca68279d3ddc6efa45f820723db45f36441"
+
+[[links]]
+rule = "classify-passenger-per-segment"
+kind = "path"
+target = "examples/skyroute/skyroute/models.py"
+rule_fingerprint = "sha256:687f4bc33984f3e306a6c203a0789d94b63457653361fb7e9cdd0b0227bdb03f"
+link_fingerprint = "sha256:db0fb1afb5d4db26a355ae7eb9bb45f2fc6af73da895308d3a927f89892f0c26"
+target_fingerprint = "sha256:a410e303e98655d34f9d06c4637924478e69c6e1b991d578fa87a0679daaaeb5"
+
+[[links]]
+rule = "classify-passenger-per-segment"
+kind = "path"
+target = "examples/skyroute/skyroute/passenger.py"
+rule_fingerprint = "sha256:687f4bc33984f3e306a6c203a0789d94b63457653361fb7e9cdd0b0227bdb03f"
+link_fingerprint = "sha256:b2580bbe18f66d50c8a8dc309f3e0938dc1281a69e2c5dba096af1991362af11"
+target_fingerprint = "sha256:0ba0bbe5f28f2904bcec37f5729127b1ae7627e208e72ee62fcc31166f4875b6"
+
+[[links]]
+rule = "classify-passenger-per-segment"
+kind = "path"
+target = "examples/skyroute/skyroute/pricing.py"
+rule_fingerprint = "sha256:687f4bc33984f3e306a6c203a0789d94b63457653361fb7e9cdd0b0227bdb03f"
+link_fingerprint = "sha256:705497ecf00963c93a1305db8e0ba07868cc12b54d5ef0798e6c4b62056b4340"
+target_fingerprint = "sha256:21b8ae42a52b6671fb8c9f8294c9032ede8366d4166701408e0a6165b5974632"
+
+[[links]]
+rule = "classify-passenger-per-segment"
+kind = "path"
+target = "examples/skyroute/skyroute/quote.py"
+rule_fingerprint = "sha256:687f4bc33984f3e306a6c203a0789d94b63457653361fb7e9cdd0b0227bdb03f"
+link_fingerprint = "sha256:dad3fa967c2b89c199b75a0fc2a1353736d8c0bee3bb11e85a87eef131bdb45c"
+target_fingerprint = "sha256:73c613b30e8ee3e18feb8ab3218c21034dbfd119c5fda9d63a20af3ad45bade7"
+
+[[links]]
+rule = "explain-non-obvious-decisions"
+kind = "path"
+target = "README.md"
+rule_fingerprint = "sha256:313e1e4d5a8c3b29b60600f3fc1d38f095c68f6834068086756a2e18ecbc86fa"
+link_fingerprint = "sha256:d1d66d958cb9d7d168ac5b6cfb9159985a4c8dabbaf643646d8a4aa2e42f5064"
+target_fingerprint = "sha256:d79d04e775824e37d4737c1d11398b33c66602a4e2ffbb492747a51fbf7d1e39"
+
+[[links]]
+rule = "retain-segment-quote-explanations"
+kind = "path"
+target = "examples/skyroute/skyroute/pricing.py"
+rule_fingerprint = "sha256:0dc967e64da306a37006c9b6235daa8b2050dab01cedad8519058645bd630692"
+link_fingerprint = "sha256:705497ecf00963c93a1305db8e0ba07868cc12b54d5ef0798e6c4b62056b4340"
+target_fingerprint = "sha256:21b8ae42a52b6671fb8c9f8294c9032ede8366d4166701408e0a6165b5974632"
+
+[[links]]
+rule = "retain-segment-quote-explanations"
+kind = "path"
+target = "examples/skyroute/skyroute/quote.py"
+rule_fingerprint = "sha256:0dc967e64da306a37006c9b6235daa8b2050dab01cedad8519058645bd630692"
+link_fingerprint = "sha256:dad3fa967c2b89c199b75a0fc2a1353736d8c0bee3bb11e85a87eef131bdb45c"
+target_fingerprint = "sha256:73c613b30e8ee3e18feb8ab3218c21034dbfd119c5fda9d63a20af3ad45bade7"

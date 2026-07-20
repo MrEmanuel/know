@@ -1,0 +1,54 @@
+version = 1
+source_model_hash = "sha256:cc2178dcdc231a56f4e669112c066989a54fef99af5547d84e92ddd4cb510210"
+link_verification_hash = "sha256:6d9148fc39a26b6214b6d910567c57fdf25797d36b7771404357057b00e8c780"
+resolved_model_hash = "sha256:76699ed73ddc471bcce2e61f39eb75095c20f35e4e3104994dbce8780cf757b1"
+unlinked_rules = []
+
+[[links]]
+rule = "calculate-fares-in-minor-units"
+kind = "glob"
+target = "examples/skyroute/skyroute/**/*.py"
+status = "verified"
+reasons = []
+
+[[links]]
+rule = "classify-passenger-per-segment"
+kind = "path"
+target = "examples/skyroute/skyroute/models.py"
+status = "verified"
+reasons = []
+
+[[links]]
+rule = "classify-passenger-per-segment"
+kind = "path"
+target = "examples/skyroute/skyroute/passenger.py"
+status = "verified"
+reasons = []
+
+[[links]]
+rule = "classify-passenger-per-segment"
+kind = "path"
+target = "examples/skyroute/skyroute/pricing.py"
+status = "verified"
+reasons = []
+
+[[links]]
+rule = "classify-passenger-per-segment"
+kind = "path"
+target = "examples/skyroute/skyroute/quote.py"
+status = "verified"
+reasons = []
+
+[[links]]
+rule = "retain-segment-quote-explanations"
+kind = "path"
+target = "examples/skyroute/skyroute/pricing.py"
+status = "verified"
+reasons = []
+
+[[links]]
+rule = "retain-segment-quote-explanations"
+kind = "path"
+target = "examples/skyroute/skyroute/quote.py"
+status = "verified"
+reasons = []
