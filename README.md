@@ -1,5 +1,27 @@
 # Know - Surface hidden rules before code changes
 
+## OpenAI Build Week: judge quick start
+
+Know is a working developer tool, submitted to OpenAI Build Week in the
+**Developer Tools** category. The fastest way to evaluate it is the included
+SkyRoute demo:
+
+```sh
+git clone https://github.com/MrEmanuel/know.git
+cd know
+./install.sh
+./demo.sh
+```
+
+The demo shows a real domain constraint that an apparently sensible refactor
+would break. It then gives you the exact prompt to paste into Codex CLI: before
+the agent edits the protected pricing code, Know's repository hook supplies the
+relevant rule and its rationale.
+
+The complete copy-ready Devpost submission and the under-three-minute demo
+script are versioned in [`hackathon/`](hackathon/). They also document how
+Codex and GPT-5.6 were used during Build Week.
+
 ## Why Know?
 
 Know is the context layer that tells humans and AI agents which rules apply
