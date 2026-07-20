@@ -349,17 +349,65 @@ async fn context(
     } else if output.is_empty() {
         println!("No rules apply to {target}.");
     } else {
-        for rule in output {
+        for (index, rule) in output.iter().enumerate() {
+            if index > 0 {
+                println!();
+            }
             println!("{} [{}]", rule.id, rule.link.status);
-            println!("  {}", rule.description);
-            println!("  Why: {}", rule.rationale);
-            println!("  Link: {} {}", rule.link.kind, rule.link.target);
+            print_context_field("Constraint:", &rule.description);
+            print_context_field("Why:", &rule.rationale);
+            print_context_field(
+                "Applies:",
+                &format!("{} {}", rule.link.kind, rule.link.target),
+            );
             if !rule.link.reasons.is_empty() {
-                println!("  Attention: {}", rule.link.reasons.join(", "));
+                print_context_field("Attention:", &rule.link.reasons.join(", "));
             }
         }
     }
     Ok(0)
+}
+
+fn print_context_field(label: &str, value: &str) {
+    const WIDTH: usize = 88;
+    const LABEL_WIDTH: usize = 12;
+
+    let first_prefix = format!("  {label:<LABEL_WIDTH$}");
+    let continuation_prefix = " ".repeat(first_prefix.len());
+    let content_width = WIDTH.saturating_sub(first_prefix.len());
+    let mut line = String::new();
+    let mut first_line = true;
+
+    for word in value.split_whitespace() {
+        let extra_width = usize::from(!line.is_empty()) + word.len();
+        if !line.is_empty() && line.len() + extra_width > content_width {
+            println!(
+                "{}{}",
+                if first_line {
+                    &first_prefix
+                } else {
+                    &continuation_prefix
+                },
+                line
+            );
+            line.clear();
+            first_line = false;
+        }
+        if !line.is_empty() {
+            line.push(' ');
+        }
+        line.push_str(word);
+    }
+
+    println!(
+        "{}{}",
+        if first_line {
+            &first_prefix
+        } else {
+            &continuation_prefix
+        },
+        line
+    );
 }
 
 fn infer_kind(_root: &Path, target: &str) -> LinkKind {

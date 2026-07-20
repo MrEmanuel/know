@@ -85,7 +85,7 @@ seat category must be calculated independently for every flight segment.
 git clone https://github.com/MrEmanuel/know.git
 cd know
 ./install.sh
-./try-demo.sh
+./demo.sh
 ```
 
 The demo runs a two-leg itinerary, shows the verified rules linked to its
@@ -95,7 +95,7 @@ part of the demo.
 
 1. Start Codex from the repository with `codex`.
 2. Run `/hooks` and trust the repository hook if prompted.
-3. Paste the prompt printed by `./try-demo.sh`:
+3. Paste the prompt printed by `./demo.sh`:
 
    > Simplify SkyRoute by calculating passenger category once when the booking
    > is created and storing it on Passenger. Reuse it for every flight segment.

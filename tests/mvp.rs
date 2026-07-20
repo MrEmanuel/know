@@ -77,6 +77,31 @@ fn glob_links_match_context_targets() {
 }
 
 #[test]
+fn text_context_separates_and_labels_rules() {
+    let directory = TempDir::new().unwrap();
+    fs::write(directory.path().join("README.md"), "protected\n").unwrap();
+    know(&directory).arg("init").assert().success();
+    fs::write(
+        directory.path().join(".know/rules/example.toml"),
+        "[[rules]]\nid = \"first-rule\"\ndescription = \"First constraint.\"\nrationale = \"First rationale.\"\n\n[[rules.links]]\ntarget = \"README.md\"\nkind = \"path\"\n\n[[rules]]\nid = \"second-rule\"\ndescription = \"Second constraint.\"\nrationale = \"Second rationale.\"\n\n[[rules.links]]\ntarget = \"README.md\"\nkind = \"path\"\n",
+    )
+    .unwrap();
+    know(&directory).arg("index").assert().success();
+    know(&directory)
+        .args(["context", "README.md"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("  Constraint: First constraint.")
+                .and(predicate::str::contains("  Why:"))
+                .and(predicate::str::contains("  Applies:"))
+                .and(predicate::str::contains(
+                    "no-verification-entry\n\nsecond-rule [unverified]",
+                )),
+        );
+}
+
+#[test]
 fn strict_schema_rejects_unknown_fields() {
     let directory = TempDir::new().unwrap();
     know(&directory).arg("init").assert().success();

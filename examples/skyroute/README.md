@@ -19,7 +19,7 @@ The interesting code lives across several files:
 - `pricing.py` applies category-specific integer fare factors.
 - `quote.py` calculates every segment independently and retains its reasoning.
 
-After running `./try-demo.sh`, start Codex CLI with `codex`, trust the
+After running `./demo.sh`, start Codex CLI with `codex`, trust the
 repository hook through `/hooks`, and give it this tempting request:
 
 > Simplify SkyRoute by calculating passenger category once when the booking is
