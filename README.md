@@ -442,3 +442,33 @@ The baseline system focuses on developer and agent workflows; multi-party verifi
 5 Branch and merge semantics? How should the system handle one branch changing code while another changes annotations? This determines conflict and revalidation behavior.
 6 Query model complexity? Are simple lookups enough, or do you need aggregations, filters, graph traversal, and reporting? This determines the shape of the index.
 7 How is trust maintained? How does the system prove that an annotation still meaningfully applies after code changes? This is the human review and verification problem. 8. Should Know support links, globs AND symbols, or just symbols?
+
+## Current Status
+
+This project currently contains no production code.
+
+Instead, the first phase has been dedicated entirely to designing the system in detail before implementation. The repository consists primarily of Markdown specifications describing the architecture, CLI, workflows, business rules, UX, and design decisions.
+
+The goal is to produce a complete, coherent specification that can be implemented with minimal ambiguity, rather than discovering the design while writing code.
+
+### Development Process
+
+This project has been developed almost entirely using OpenAI Codex as a collaborative design partner—not as an autonomous programmer.
+
+Rather than asking Codex to generate code, I use it to:
+
+* Critically review the design.
+* Challenge assumptions and identify ambiguities.
+* Ask clarifying questions through a Socratic workflow.
+* Refine and rewrite the Markdown specifications.
+* Research best practices and compare alternative designs.
+
+The implementation has been intentionally postponed until the design is sufficiently well specified.
+
+### Why?
+
+Complex systems are difficult to design while simultaneously dealing with implementation details. By separating thinking from coding, the focus remains on defining what the system should do before deciding how it should be built.
+
+The hypothesis behind this workflow is that a thoroughly specified system will allow AI coding agents to generate implementations that are significantly closer to the intended design, reducing rework and architectural drift.
+
+Whether that hypothesis is correct remains to be seen—but this repository is the experiment.
