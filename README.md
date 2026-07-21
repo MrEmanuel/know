@@ -34,7 +34,21 @@ Software today has source code, tests, static documentation, and version control
 
 Active Memory lives and changes with your code, connecting your team’s knowledge directly to the code it protects. Before a human or AI changes code, it automatically retrieves the intent, rules, and constraints that matter.
 
+Rules live as versioned knowledge files in the repository, linked directly to the code they protect.
+
 Git became the standard for version control. Active Memory can become the standard for software memory.
+
+## Watch the introduction
+
+<p align="center">
+  <a href="https://youtu.be/gLIYgpKbXDg">
+    <img src="https://img.youtube.com/vi/gLIYgpKbXDg/maxresdefault.jpg" alt="Watch: Know — Active Memory for software" width="720" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://youtu.be/gLIYgpKbXDg">Watch the Know introduction on YouTube</a>
+</p>
 
 ## See it work with Codex
 
@@ -156,7 +170,7 @@ relying on refreshed context.
 
 ### Development Process - Thought Driven Development
 
-This project has been developed almost entirely using OpenAI Codex as a collaborative design partner. Not as an autonomous programmer. Around 100 hours have been spent in a Socratic workflow with Codex, where I ask questions, challenge assumptions, and refine the design. The resulting specifications are in Markdown files under `system-architecture/`. The design is versioned with the code it describes, so that the specifications can be reviewed and improved over time.
+This project has been developed almost entirely using OpenAI GPT 5.6 and Codex as a collaborative design partner. Not as an autonomous programmer. Around 100 hours have been spent in a Socratic workflow with Codex, where I ask questions, challenge assumptions, and refine the design. The resulting specifications are in Markdown files under `system-architecture/`. The design is versioned with the code it describes, so that the specifications can be reviewed and improved over time.
 
 Implementation was intentionally postponed until the design was sufficiently
 well specified. The MVP is now the first test of that specification.
